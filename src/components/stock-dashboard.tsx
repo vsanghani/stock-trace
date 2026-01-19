@@ -84,7 +84,7 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
         if (beta === undefined || beta === null) return 5 // Default if unknown
         // Beta 1 is market average. Scale roughy: 0.5 -> 2, 1 -> 5, 2 -> 10
         const score = Math.min(10, Math.max(0, beta * 5))
-        return Math.round(score * 10) / 10
+        return Math.round(score)
     }
 
     const getRecommendation = (beta: number | undefined, profile: RiskProfile) => {
@@ -178,21 +178,9 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
                 <div className="lg:col-span-1 glass rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center space-y-4">
                     <h3 className="text-xl font-bold flex items-center gap-2"><Gauge className="w-5 h-5" /> Risk Profile Analysis</h3>
 
-                    {/* Speedometer Visual */}
-                    <div className="relative w-48 h-24 overflow-hidden mt-4">
-                        <div className="absolute inset-0 bg-secondary rounded-t-full"></div>
-                        <motion.div
-                            initial={{ rotate: -90 }}
-                            animate={{ rotate: -90 + (Math.min(riskScore, 10) / 10) * 180 }}
-                            transition={{ duration: 1, type: "spring" }}
-                            className="absolute bottom-0 left-1/2 w-full h-2 bg-foreground origin-left"
-                            style={{ marginLeft: "-50%", width: "50%" }}
-                        />
-                        <div className="absolute bottom-0 left-0 w-full h-full flex justify-between items-end px-4 pb-2 z-10 text-xs font-bold text-muted-foreground">
-                            <span className="text-green-500">Low</span>
-                            <span className="text-yellow-500">Mod</span>
-                            <span className="text-red-500">High</span>
-                        </div>
+                    {/* Emoji Visual */}
+                    <div className="text-8xl mt-6 mb-2 transition-all duration-500 transform hover:scale-110 cursor-default select-none animate-in zoom-in spin-in-3">
+                        {getEmoji(recommendation.action)}
                     </div>
                     <div className="text-3xl font-bold font-mono">{riskScore}<span className="text-base text-muted-foreground">/10</span></div>
 
@@ -260,4 +248,10 @@ function formatLargeNumber(num?: number) {
     if (num >= 1.0e+9) return (num / 1.0e+9).toFixed(2) + "B"
     if (num >= 1.0e+6) return (num / 1.0e+6).toFixed(2) + "M"
     return num.toString()
+}
+
+function getEmoji(action: string) {
+    if (action === "BUY") return "😃"
+    if (action === "AVOID") return "😠"
+    return "😐" // Handles HOLD and others
 }
