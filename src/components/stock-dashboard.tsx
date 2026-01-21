@@ -156,7 +156,7 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
                     </div>
                     <div className={`flex items-center gap-1 text-lg font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
                         {isPositive ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
-                        {Math.abs(data.regularMarketChangePercent || 0).toFixed(2)}%
+                        {formatCurrency(Math.abs(data.regularMarketChange || 0), data.currency)} ({(Math.abs(data.regularMarketChangePercent || 0) * 100).toFixed(2)}%)
                     </div>
                 </div>
             </div>
