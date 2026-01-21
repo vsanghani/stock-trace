@@ -3,6 +3,7 @@ export interface StockData {
     shortName: string
     currency: string
     regularMarketPrice: number
+    regularMarketChange: number
     regularMarketChangePercent: number
     marketCap: number
     regularMarketOpen: number

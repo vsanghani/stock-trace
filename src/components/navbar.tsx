@@ -12,6 +12,9 @@ export function Navbar() {
             </Link>
 
             <div className="flex items-center gap-4 pointer-events-auto">
+                <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Home
+                </Link>
                 <Link href="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     Blog
                 </Link>

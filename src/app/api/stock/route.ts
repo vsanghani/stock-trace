@@ -32,6 +32,7 @@ export async function GET(request: Request) {
             shortName: price.shortName || ticker,
             currency: price.currency,
             regularMarketPrice: price.regularMarketPrice,
+            regularMarketChange: price.regularMarketChange,
             regularMarketChangePercent: price.regularMarketChangePercent,
             marketCap: price.marketCap,
             regularMarketOpen: price.regularMarketOpen,
