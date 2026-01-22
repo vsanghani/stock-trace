@@ -20,4 +20,26 @@ export interface StockData {
     debtToEquity?: number
     returnOnEquity?: number
     currentRatio?: number
+    // Analyst Data
+    consensus?: {
+        buy: number
+        strongBuy: number
+        hold: number
+        sell: number
+        strongSell: number
+    }
+    targets?: {
+        high: number
+        low: number
+        mean: number
+        median: number
+        current: number
+    }
+    analystActions?: Array<{
+        date: string
+        firm: string
+        toGrade: string
+        fromGrade: string
+        action: string
+    }>
 }

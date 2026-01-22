@@ -12,11 +12,11 @@ export async function GET(request: Request) {
     }
 
     try {
-        const queryOptions = { modules: ['price', 'summaryDetail', 'financialData', 'defaultKeyStatistics'] };
+        const queryOptions = { modules: ['price', 'summaryDetail', 'financialData', 'defaultKeyStatistics', 'recommendationTrend', 'upgradeDowngradeHistory'] };
         // @ts-ignore - yahoo-finance2 types can be tricky with modules
         const result = await yahooFinance.quoteSummary(ticker, queryOptions) as any;
 
-        console.log('Yahoo Finance Result:', JSON.stringify(result, null, 2));
+        // console.log('Yahoo Finance Result:', JSON.stringify(result, null, 2));
 
         if (!result) {
             throw new Error('No data returned from Yahoo Finance');
@@ -26,6 +26,8 @@ export async function GET(request: Request) {
         const summaryDetail = result.summaryDetail || {};
         const financialData = result.financialData || {};
         const defaultKeyStatistics = result.defaultKeyStatistics || {};
+        const recommendationTrend = result.recommendationTrend?.trend?.[0] || {};
+        const upgradesDowngrades = result.upgradeDowngradeHistory?.history?.slice(0, 6) || [];
 
         const stockData = {
             symbol: price.symbol || ticker,
@@ -50,6 +52,29 @@ export async function GET(request: Request) {
             debtToEquity: financialData.debtToEquity,
             returnOnEquity: financialData.returnOnEquity,
             currentRatio: financialData.currentRatio,
+
+            // Analyst Data
+            consensus: {
+                buy: recommendationTrend.buy || 0,
+                strongBuy: recommendationTrend.strongBuy || 0,
+                hold: recommendationTrend.hold || 0,
+                sell: recommendationTrend.sell || 0,
+                strongSell: recommendationTrend.strongSell || 0,
+            },
+            targets: {
+                high: financialData.targetHighPrice,
+                low: financialData.targetLowPrice,
+                mean: financialData.targetMeanPrice,
+                median: financialData.targetMedianPrice,
+                current: financialData.currentPrice,
+            },
+            analystActions: upgradesDowngrades.map((action: any) => ({
+                date: action.epochGradeDate,
+                firm: action.firm,
+                toGrade: action.toGrade,
+                fromGrade: action.fromGrade,
+                action: action.action,
+            })),
         };
 
         return NextResponse.json(stockData);
