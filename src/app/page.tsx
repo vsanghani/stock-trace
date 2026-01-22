@@ -3,13 +3,11 @@
 import * as React from "react"
 import { StockSearch } from "@/components/stock-search"
 import { StockDashboard } from "@/components/stock-dashboard"
-import { RiskSelector, RiskProfile } from "@/components/risk-selector"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function Home() {
   const [ticker, setTicker] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
-  const [riskProfile, setRiskProfile] = React.useState<"conservative" | "moderate" | "aggressive">("moderate")
 
   const handleSearch = async (query: string) => {
     setLoading(true)
@@ -41,7 +39,7 @@ export default function Home() {
 
             <div className="space-y-6 w-full flex flex-col items-center">
               <StockSearch onSearch={handleSearch} isLoading={loading} />
-              <RiskSelector selected={riskProfile} onSelect={setRiskProfile} />
+              {/* Removed Risk Selector */}
             </div>
           </motion.div>
         ) : (
@@ -61,12 +59,12 @@ export default function Home() {
               <div className="w-full max-w-xl flex flex-col gap-4">
                 <StockSearch onSearch={handleSearch} isLoading={loading} />
                 <div className="flex justify-center">
-                  <RiskSelector selected={riskProfile} onSelect={setRiskProfile} />
+                  {/* Removed Risk Selector */}
                 </div>
               </div>
               <div className="w-[100px] hidden md:block"></div> {/* Spacer for alignment */}
             </div>
-            <StockDashboard ticker={ticker} riskProfile={riskProfile} />
+            <StockDashboard ticker={ticker} />
           </motion.div>
         )}
       </AnimatePresence>

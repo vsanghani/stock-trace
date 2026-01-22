@@ -2,16 +2,14 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { ArrowDown, ArrowUp, Download, Loader2, Gauge } from "lucide-react"
+import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History } from "lucide-react"
 import { StockData } from "@/types/stock"
-import { RiskProfile } from "./risk-selector"
 
 interface StockDashboardProps {
     ticker: string
-    riskProfile: RiskProfile
 }
 
-export function StockDashboard({ ticker, riskProfile }: StockDashboardProps) {
+export function StockDashboard({ ticker }: StockDashboardProps) {
     const [data, setData] = React.useState<StockData | null>(null)
     const [loading, setLoading] = React.useState(true)
     const [error, setError] = React.useState<string | null>(null)
@@ -46,29 +44,25 @@ export function StockDashboard({ ticker, riskProfile }: StockDashboardProps) {
 
         const content = `STOCK ANALYSIS REPORT: ${data.symbol}
 Generated on: ${new Date().toLocaleString()}
-Risk Profile: ${riskProfile.toUpperCase()}
-Risk Score: ${calculateRiskScore(data.beta)}/10
-Recommendation: ${getRecommendation(data.beta, riskProfile).action}
 
 -- MARKET DATA --
 Price: ${formatCurrency(data.regularMarketPrice, data.currency)}
-Change: ${data.regularMarketChangePercent?.toFixed(2)}%
+Change: ${formatCurrency(data.regularMarketChange, data.currency)} (${(data.regularMarketChangePercent * 100).toFixed(2)}%)
 Market Cap: ${formatLargeNumber(data.marketCap)}
 Beta: ${data.beta?.toFixed(2) || 'N/A'}
-Open: ${formatCurrency(data.regularMarketOpen, data.currency)}
-High: ${formatCurrency(data.regularMarketDayHigh, data.currency)}
-Low: ${formatCurrency(data.regularMarketDayLow, data.currency)}
 52W High: ${formatCurrency(data.fiftyTwoWeekHigh, data.currency)}
 52W Low: ${formatCurrency(data.fiftyTwoWeekLow, data.currency)}
-Dividend Rate: ${data.dividendRate || 'N/A'}
-Dividend Yield: ${data.dividendYield ? (data.dividendYield * 100).toFixed(2) + '%' : 'N/A'}
+
+-- ANALYST CONSENSUS --
+Buy: ${data.consensus?.buy} | Hold: ${data.consensus?.hold} | Sell: ${data.consensus?.sell}
+Mean Target: ${formatCurrency(data.targets?.mean, data.currency)}
+Current Price: ${formatCurrency(data.targets?.current, data.currency)}
 
 -- RATIO ANALYSIS --
 P/E Ratio: ${data.trailingPE?.toFixed(2) || 'N/A'}
 P/B Ratio: ${data.priceToBook?.toFixed(2) || 'N/A'}
 Debt/Equity: ${data.debtToEquity?.toFixed(2) || 'N/A'}
 ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A'}
-Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
 `
         const blob = new Blob([content], { type: 'text/plain' })
         const url = URL.createObjectURL(blob)
@@ -77,42 +71,6 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
         a.download = `${data.symbol}_Analysis.txt`
         a.click()
         URL.revokeObjectURL(url)
-    }
-
-    // Risk Calculation Logic
-    const calculateRiskScore = (beta?: number) => {
-        if (beta === undefined || beta === null) return 5 // Default if unknown
-        // Beta 1 is market average. Scale roughy: 0.5 -> 2, 1 -> 5, 2 -> 10
-        const score = Math.min(10, Math.max(0, beta * 5))
-        return Math.round(score)
-    }
-
-    const getRecommendation = (beta: number | undefined, profile: RiskProfile) => {
-        const score = calculateRiskScore(beta)
-
-        // Risk bands
-        const isLowRisk = score <= 4
-        const isModRisk = score > 4 && score <= 7
-        const isHighRisk = score > 7
-
-        if (profile === 'conservative') {
-            if (isLowRisk) return { action: "BUY", reason: "Matches your conservative profile with lower volatility.", color: "text-green-500" }
-            if (isModRisk) return { action: "HOLD", reason: "Slightly higher risk than your preference.", color: "text-yellow-500" }
-            return { action: "AVOID", reason: "Too volatile for a conservative strategy.", color: "text-red-500" }
-        }
-
-        if (profile === 'moderate') {
-            if (isLowRisk) return { action: "BUY", reason: "Safe foundation for your portfolio.", color: "text-green-500" }
-            if (isModRisk) return { action: "BUY", reason: "Aligns perfectly with balanced growth.", color: "text-green-500" }
-            return { action: "HOLD", reason: "Higher volatility, proceed with caution.", color: "text-yellow-500" }
-        }
-
-        if (profile === 'aggressive') {
-            if (isHighRisk) return { action: "BUY", reason: "High volatility fits your growth targets.", color: "text-green-500" }
-            return { action: "BUY/HOLD", reason: "Lower risk/return than your aggressive target.", color: "text-yellow-500" }
-        }
-
-        return { action: "N/A", reason: "Insufficient data", color: "text-gray-500" }
     }
 
     if (loading) {
@@ -135,8 +93,21 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
     if (!data) return null
 
     const isPositive = (data.regularMarketChangePercent || 0) >= 0
-    const riskScore = calculateRiskScore(data.beta)
-    const recommendation = getRecommendation(data.beta, riskProfile)
+
+    // Calculate Consensus Summary
+    const totalRatings = (data.consensus?.buy || 0) + (data.consensus?.strongBuy || 0) + (data.consensus?.hold || 0) + (data.consensus?.sell || 0) + (data.consensus?.strongSell || 0);
+    const buyPercentage = totalRatings > 0 ? ((data.consensus?.buy || 0) + (data.consensus?.strongBuy || 0)) / totalRatings * 100 : 0;
+
+    let consensusLabel = "Neutral";
+    let consensusColor = "text-yellow-500";
+
+    if (buyPercentage > 60) {
+        consensusLabel = "Buy";
+        consensusColor = "text-green-500";
+    } else if (buyPercentage < 20) {
+        consensusLabel = "Sell";
+        consensusColor = "text-red-500";
+    }
 
     return (
         <motion.div
@@ -164,7 +135,7 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
             {/* Main Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard label="Market Cap" value={formatLargeNumber(data.marketCap)} />
-                <StatCard label="Beta (Risk)" value={data.beta?.toFixed(2) || 'N/A'} />
+                <StatCard label="Beta" value={data.beta?.toFixed(2) || 'N/A'} />
                 <StatCard label="52W High" value={formatCurrency(data.fiftyTwoWeekHigh, data.currency)} />
                 <StatCard label="52W Low" value={formatCurrency(data.fiftyTwoWeekLow, data.currency)} />
                 <StatCard label="Dividend" value={data.dividendRate || 'N/A'} />
@@ -174,40 +145,120 @@ Current Ratio: ${data.currentRatio?.toFixed(2) || 'N/A'}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Risk & Recommendation Engine */}
-                <div className="lg:col-span-1 glass rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center space-y-4">
-                    <h3 className="text-xl font-bold flex items-center gap-2"><Gauge className="w-5 h-5" /> Risk Profile Analysis</h3>
+                {/* Analyst Consensus & targets */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Consensus Card */}
+                    <div className="glass rounded-xl shadow-lg p-6 flex flex-col items-center text-center space-y-4">
+                        <h3 className="text-xl font-bold flex items-center gap-2"><Target className="w-5 h-5" /> Analyst Consensus</h3>
+                        <div className="text-5xl font-black transition-all duration-500 animate-in zoom-in spin-in-3">
+                            {consensusLabel === "Buy" ? "🚀" : consensusLabel === "Sell" ? "📉" : "⚖️"}
+                        </div>
 
-                    {/* Emoji Visual */}
-                    <div className="text-8xl mt-6 mb-2 transition-all duration-500 transform hover:scale-110 cursor-default select-none animate-in zoom-in spin-in-3">
-                        {getEmoji(recommendation.action)}
+                        <div className="w-full pt-4 border-t border-border">
+                            <p className="text-sm text-muted-foreground mb-1">Overall Recommendation</p>
+                            <div className={`text-3xl font-black ${consensusColor}`}>{consensusLabel}</div>
+                            <div className="flex justify-center gap-4 mt-4 text-xs font-medium">
+                                <div className="text-green-500 flex flex-col">
+                                    <span className="text-lg">{data.consensus?.buy || 0}</span>
+                                    <span>BUY</span>
+                                </div>
+                                <div className="text-yellow-500 flex flex-col">
+                                    <span className="text-lg">{data.consensus?.hold || 0}</span>
+                                    <span>HOLD</span>
+                                </div>
+                                <div className="text-red-500 flex flex-col">
+                                    <span className="text-lg">{data.consensus?.sell || 0}</span>
+                                    <span>SELL</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="text-3xl font-bold font-mono">{riskScore}<span className="text-base text-muted-foreground">/10</span></div>
 
-                    <div className="w-full pt-4 border-t border-border">
-                        <p className="text-sm text-muted-foreground mb-1">Recommendation for {riskProfile.toUpperCase()}</p>
-                        <div className={`text-2xl font-black ${recommendation.color}`}>{recommendation.action}</div>
-                        <p className="text-sm mt-2 opacity-80">{recommendation.reason}</p>
+                    {/* Price Targets Card */}
+                    <div className="glass rounded-xl shadow-lg p-6 space-y-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Price Targets</h3>
+                        <div className="space-y-3">
+                            <TargetRow label="High" value={data.targets?.high} currency={data.currency} />
+                            <TargetRow label="Mean" value={data.targets?.mean} currency={data.currency} highlight />
+                            <TargetRow label="Low" value={data.targets?.low} currency={data.currency} />
+                            <div className="border-t border-border pt-2 mt-2">
+                                <TargetRow label="Current" value={data.targets?.current} currency={data.currency} />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Ratio Analysis Section */}
-                <div className="lg:col-span-2 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-2xl font-bold">Financial Ratios</h3>
-                        <button
-                            onClick={handleExport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
-                        >
-                            <Download className="w-4 h-4" />
-                            Export Analysis
-                        </button>
+                {/* Right Column: Ratios & Analyst Feed */}
+                <div className="lg:col-span-2 space-y-8">
+                    {/* Financial Ratios */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-2xl font-bold">Financial Ratios</h3>
+                            <button
+                                onClick={handleExport}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+                            >
+                                <Download className="w-4 h-4" />
+                                Export Analysis
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <RatioCard title="Price to Book" value={data.priceToBook?.toFixed(2)} description="Market value relative to book value." />
+                            <RatioCard title="Debt to Equity" value={data.debtToEquity?.toFixed(2)} description="Proportion of equity and debt used to finance assets." />
+                            <RatioCard title="Return on Equity" value={data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A'} description="Profitability relative to shareholder equity." />
+                            <RatioCard title="Current Ratio" value={data.currentRatio?.toFixed(2)} description="Ability to pay short-term obligations." />
+                        </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <RatioCard title="Price to Book" value={data.priceToBook?.toFixed(2)} description="Market value relative to book value." />
-                        <RatioCard title="Debt to Equity" value={data.debtToEquity?.toFixed(2)} description="Proportion of equity and debt used to finance assets." />
-                        <RatioCard title="Return on Equity" value={data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A'} description="Profitability relative to shareholder equity." />
-                        <RatioCard title="Current Ratio" value={data.currentRatio?.toFixed(2)} description="Ability to pay short-term obligations." />
+
+                    {/* Analyst Recent Actions */}
+                    <div className="space-y-4">
+                        <h3 className="text-2xl font-bold flex items-center gap-2">
+                            <History className="w-6 h-6" /> Recent Analyst Actions
+                        </h3>
+                        <div className="glass rounded-xl overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs uppercase bg-white/5 text-muted-foreground border-b border-white/10">
+                                        <tr>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4">Firm</th>
+                                            <th className="px-6 py-4">Action</th>
+                                            <th className="px-6 py-4">Rating</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {data.analystActions && data.analystActions.length > 0 ? (
+                                            data.analystActions.map((action, i) => (
+                                                <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap opacity-80">
+                                                        {new Date(action.date).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-medium">{action.firm}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase
+                                                            ${action.action.includes('up') ? 'bg-green-500/10 text-green-500' :
+                                                                action.action.includes('down') ? 'bg-red-500/10 text-red-500' :
+                                                                    'bg-blue-500/10 text-blue-500'}`}>
+                                                            {action.action}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 opacity-90">
+                                                        {action.fromGrade && <span className="text-muted-foreground text-xs">{action.fromGrade} → </span>}
+                                                        {action.toGrade}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                                                    No recent analyst actions found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,6 +287,17 @@ function RatioCard({ title, value, description }: { title: string, value?: strin
     )
 }
 
+function TargetRow({ label, value, currency, highlight }: { label: string, value?: number, currency: string, highlight?: boolean }) {
+    return (
+        <div className={`flex justify-between items-center p-2 rounded-lg ${highlight ? 'bg-primary/10' : ''}`}>
+            <span className="text-sm font-medium text-muted-foreground">{label}</span>
+            <span className={`font-mono font-bold ${highlight ? 'text-primary' : ''}`}>
+                {value ? formatCurrency(value, currency) : 'N/A'}
+            </span>
+        </div>
+    )
+}
+
 // Helpers
 function formatCurrency(val?: number, currency: string = 'USD') {
     if (val === undefined || val === null) return 'N/A'
@@ -248,10 +310,4 @@ function formatLargeNumber(num?: number) {
     if (num >= 1.0e+9) return (num / 1.0e+9).toFixed(2) + "B"
     if (num >= 1.0e+6) return (num / 1.0e+6).toFixed(2) + "M"
     return num.toString()
-}
-
-function getEmoji(action: string) {
-    if (action === "BUY") return "😃"
-    if (action === "AVOID") return "😠"
-    return "😐" // Handles HOLD and others
 }
