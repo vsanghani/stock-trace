@@ -1,19 +1,24 @@
 "use client"
 
 import * as React from "react"
+import { Suspense } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { StockSearch } from "@/components/stock-search"
 import { StockDashboard } from "@/components/stock-dashboard"
 import { motion, AnimatePresence } from "framer-motion"
 
-export default function Home() {
-  const [ticker, setTicker] = React.useState<string | null>(null)
+function HomeContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const ticker = searchParams.get("ticker")
   const [loading, setLoading] = React.useState(false)
 
   const handleSearch = async (query: string) => {
     setLoading(true)
     // Simulate API call for now
     await new Promise(resolve => setTimeout(resolve, 1000))
-    setTicker(query)
+    // Update the URL query param
+    router.push(`/?ticker=${encodeURIComponent(query)}`)
     setLoading(false)
   }
 
@@ -62,5 +67,13 @@ export default function Home() {
         )}
       </AnimatePresence>
     </div>
-  );
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
+  )
 }
