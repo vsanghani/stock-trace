@@ -49,20 +49,13 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <button
-                onClick={() => setTicker(null)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors self-start md:self-auto"
-              >
-                ← Back to Search
-              </button>
+            <div className="flex flex-col w-full items-center gap-4">
               <div className="w-full max-w-xl flex flex-col gap-4">
                 <StockSearch onSearch={handleSearch} isLoading={loading} />
                 <div className="flex justify-center">
                   {/* Removed Risk Selector */}
                 </div>
               </div>
-              <div className="w-[100px] hidden md:block"></div> {/* Spacer for alignment */}
             </div>
             <StockDashboard ticker={ticker} />
           </motion.div>
