@@ -25,15 +25,15 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #f4f4f5;
   --foreground: #09090b;
   --primary: #18181b;
   --primary-foreground: #fafafa;
-  --secondary: #f4f4f5;
+  --secondary: #e4e4e7;
   --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
+  --muted: #e4e4e7;
   --muted-foreground: #71717a;
-  --accent: #f4f4f5;
+  --accent: #e4e4e7;
   --accent-foreground: #18181b;
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
