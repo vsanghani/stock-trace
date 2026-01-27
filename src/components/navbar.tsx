@@ -18,6 +18,9 @@ export function Navbar() {
                 <Link href="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     Blog
                 </Link>
+                <Link href="/pnl-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    PnL Calculator
+                </Link>
                 <div className="h-4 w-px bg-border/50" />
                 <MarketClock />
                 <ThemeToggle />
