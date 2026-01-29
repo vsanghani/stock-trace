@@ -82,7 +82,7 @@ export function MarketClock() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-12 right-0 w-64 glass rounded-xl shadow-lg p-2 flex flex-col gap-1"
+                        className="absolute top-12 right-0 w-64 bg-background/95 backdrop-blur-2xl border border-border/50 rounded-xl shadow-lg p-2 flex flex-col gap-1"
                     >
                         {MARKETS.map((market) => (
                             <button
