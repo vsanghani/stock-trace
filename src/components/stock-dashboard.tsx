@@ -4,6 +4,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History } from "lucide-react"
 import { StockData } from "@/types/stock"
+import { SentimentBadge } from "@/components/SentimentBadge"
 
 interface StockDashboardProps {
     ticker: string
@@ -117,9 +118,12 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
         >
             {/* Header Section */}
             <div className="glass rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-4xl font-bold tracking-tight">{data.symbol}</h2>
-                    <p className="text-muted-foreground text-lg">{data.shortName}</p>
+                <div className="space-y-3">
+                    <div>
+                        <h2 className="text-4xl font-bold tracking-tight">{data.symbol}</h2>
+                        <p className="text-muted-foreground text-lg">{data.shortName}</p>
+                    </div>
+                    <SentimentBadge ticker={ticker} />
                 </div>
                 <div className="text-right flex flex-col items-end">
                     <div className="text-4xl font-mono font-bold">
