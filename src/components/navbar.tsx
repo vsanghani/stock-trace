@@ -32,6 +32,9 @@ export function Navbar() {
                 <Link href="/senlogic" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     senLogic
                 </Link>
+                <Link href="/stress-test" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Stress Test
+                </Link>
                 <div className="h-4 w-px bg-border/50" />
                 <MarketClock />
                 <ThemeToggle />
@@ -82,6 +85,13 @@ export function Navbar() {
                                 className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
                             >
                                 senLogic
+                            </Link>
+                            <Link
+                                href="/stress-test"
+                                onClick={() => setIsOpen(false)}
+                                className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
+                            >
+                                Stress Test
                             </Link>
                         </div>
 
