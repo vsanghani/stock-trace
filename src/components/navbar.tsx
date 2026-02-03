@@ -38,6 +38,9 @@ export function Navbar() {
                 <Link href="/correlation" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     Correlation
                 </Link>
+                <Link href="/whisper-alerts" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Whisper
+                </Link>
                 <div className="h-4 w-px bg-border/50" />
                 <MarketClock />
                 <ThemeToggle />
@@ -102,6 +105,13 @@ export function Navbar() {
                                 className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
                             >
                                 Correlation
+                            </Link>
+                            <Link
+                                href="/whisper-alerts"
+                                onClick={() => setIsOpen(false)}
+                                className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
+                            >
+                                Whisper Alerts
                             </Link>
                         </div>
 
