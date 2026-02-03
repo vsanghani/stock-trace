@@ -35,6 +35,9 @@ export function Navbar() {
                 <Link href="/stress-test" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     Stress Test
                 </Link>
+                <Link href="/correlation" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Correlation
+                </Link>
                 <div className="h-4 w-px bg-border/50" />
                 <MarketClock />
                 <ThemeToggle />
@@ -92,6 +95,13 @@ export function Navbar() {
                                 className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
                             >
                                 Stress Test
+                            </Link>
+                            <Link
+                                href="/correlation"
+                                onClick={() => setIsOpen(false)}
+                                className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
+                            >
+                                Correlation
                             </Link>
                         </div>
 
