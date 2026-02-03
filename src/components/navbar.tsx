@@ -69,22 +69,19 @@ export function Navbar() {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute top-full right-0 mt-2 w-56 py-2 rounded-xl border border-border/50 bg-background/80 backdrop-blur-xl shadow-xl shadow-black/10"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(var(--background-rgb), 0.85), rgba(var(--background-rgb), 0.95))',
-                                }}
+                                className="absolute top-full right-0 mt-2 w-56 py-2 rounded-xl glass-strong"
                             >
-                                {/* Glass effect overlay */}
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                                {/* Glass shimmer overlay */}
+                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
 
                                 {EXPERIMENTS.map((item) => (
                                     <Link
                                         key={item.href}
                                         href={item.href}
                                         onClick={() => setExperimentsOpen(false)}
-                                        className="relative flex flex-col px-4 py-2.5 hover:bg-white/5 transition-colors"
+                                        className="relative flex flex-col px-4 py-2.5 hover:bg-foreground/5 transition-colors"
                                     >
-                                        <span className="text-sm font-medium text-foreground">
+                                        <span className="text-sm font-semibold text-foreground">
                                             {item.label}
                                         </span>
                                         <span className="text-xs text-muted-foreground">
