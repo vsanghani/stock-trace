@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     }
 
     try {
-        const queryOptions = { modules: ['price', 'summaryDetail', 'financialData', 'defaultKeyStatistics', 'recommendationTrend', 'upgradeDowngradeHistory'] };
+        const queryOptions = { modules: ['price', 'summaryDetail', 'financialData', 'defaultKeyStatistics', 'recommendationTrend', 'upgradeDowngradeHistory', 'assetProfile', 'earnings'] };
         // @ts-ignore - yahoo-finance2 types can be tricky with modules
         const result = await yahooFinance.quoteSummary(ticker, queryOptions) as any;
 
@@ -28,6 +28,22 @@ export async function GET(request: Request) {
         const defaultKeyStatistics = result.defaultKeyStatistics || {};
         const recommendationTrend = result.recommendationTrend?.trend?.[0] || {};
         const upgradesDowngrades = result.upgradeDowngradeHistory?.history?.slice(0, 6) || [];
+        const assetProfile = result.assetProfile || {};
+        const earnings = result.earnings || {};
+
+        // Extract quarterly earnings (last 4 quarters)
+        const quarterlyEarnings = (earnings.earningsChart?.quarterly || []).slice(-4).map((q: any) => ({
+            date: q.date || '',
+            actual: q.actual?.raw ?? q.actual ?? null,
+            estimate: q.estimate?.raw ?? q.estimate ?? null,
+        }));
+
+        // Extract company officers (top 10)
+        const companyOfficers = (assetProfile.companyOfficers || []).slice(0, 10).map((o: any) => ({
+            name: o.name || '',
+            title: o.title || '',
+            age: o.age || undefined,
+        }));
 
         const stockData = {
             symbol: price.symbol || ticker,
@@ -75,6 +91,21 @@ export async function GET(request: Request) {
                 fromGrade: action.fromGrade,
                 action: action.action,
             })),
+
+            // Company Profile
+            longBusinessSummary: assetProfile.longBusinessSummary || undefined,
+            sector: assetProfile.sector || undefined,
+            industry: assetProfile.industry || undefined,
+            website: assetProfile.website || undefined,
+            city: assetProfile.city || undefined,
+            country: assetProfile.country || undefined,
+            fullTimeEmployees: assetProfile.fullTimeEmployees || undefined,
+
+            // Company Officers
+            companyOfficers,
+
+            // Quarterly Earnings
+            quarterlyEarnings,
         };
 
         return NextResponse.json(stockData);

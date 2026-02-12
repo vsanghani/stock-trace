@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History } from "lucide-react"
 import { StockData } from "@/types/stock"
 import { SentimentBadge } from "@/components/SentimentBadge"
+import { CompanyInfo } from "@/components/company-info"
 
 interface StockDashboardProps {
     ticker: string
@@ -135,6 +136,9 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                     </div>
                 </div>
             </div>
+
+            {/* Company Info Section */}
+            <CompanyInfo data={data} />
 
             {/* Main Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
