@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History } from "lucide-react"
 import { StockData } from "@/types/stock"
 import { SentimentBadge } from "@/components/SentimentBadge"
+import { CompanyInfo } from "@/components/company-info"
 
 interface StockDashboardProps {
     ticker: string
@@ -136,81 +137,83 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                 </div>
             </div>
 
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Market Cap" value={formatLargeNumber(data.marketCap)} />
-                <StatCard label="Beta" value={data.beta?.toFixed(2) || 'N/A'} />
-                <StatCard label="52W High" value={formatCurrency(data.fiftyTwoWeekHigh, data.currency)} />
-                <StatCard label="52W Low" value={formatCurrency(data.fiftyTwoWeekLow, data.currency)} />
-                <StatCard label="Dividend" value={data.dividendRate || 'N/A'} />
-                <StatCard label="Yield" value={data.dividendYield ? (data.dividendYield * 100).toFixed(2) + '%' : 'N/A'} />
-                <StatCard label="P/E Ratio" value={data.trailingPE?.toFixed(2) || 'N/A'} />
-                <StatCard label="EPS" value={data.trailingPE ? ((data.regularMarketPrice || 0) / data.trailingPE).toFixed(2) : 'N/A'} />
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                {/* Left Column: Stock Price Info (60%) */}
+                <div className="lg:col-span-3 space-y-8">
+                    {/* Main Stats Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <StatCard label="Market Cap" value={formatLargeNumber(data.marketCap)} />
+                        <StatCard label="Beta" value={data.beta?.toFixed(2) || 'N/A'} />
+                        <StatCard label="52W High" value={formatCurrency(data.fiftyTwoWeekHigh, data.currency)} />
+                        <StatCard label="52W Low" value={formatCurrency(data.fiftyTwoWeekLow, data.currency)} />
+                        <StatCard label="Dividend" value={data.dividendRate || 'N/A'} />
+                        <StatCard label="Yield" value={data.dividendYield ? (data.dividendYield * 100).toFixed(2) + '%' : 'N/A'} />
+                        <StatCard label="P/E Ratio" value={data.trailingPE?.toFixed(2) || 'N/A'} />
+                        <StatCard label="EPS" value={data.trailingPE ? ((data.regularMarketPrice || 0) / data.trailingPE).toFixed(2) : 'N/A'} />
+                    </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Analyst Consensus & targets */}
-                <div className="lg:col-span-1 space-y-6">
-                    {/* Consensus Card */}
-                    <div className="glass rounded-xl shadow-lg p-6 flex flex-col items-center text-center space-y-4">
-                        <h3 className="text-xl font-bold flex items-center gap-2"><Target className="w-5 h-5" /> Analyst Consensus</h3>
-                        <div className="text-5xl font-black transition-all duration-500 animate-in zoom-in spin-in-3">
-                            {consensusLabel === "Buy" ? "🚀" : consensusLabel === "Sell" ? "📉" : "⚖️"}
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Analyst Consensus & targets */}
+                        <div className="space-y-6">
+                            {/* Consensus Card */}
+                            <div className="glass rounded-xl shadow-lg p-6 flex flex-col items-center text-center space-y-4">
+                                <h3 className="text-xl font-bold flex items-center gap-2"><Target className="w-5 h-5" /> Analyst Consensus</h3>
+                                <div className="text-5xl font-black transition-all duration-500 animate-in zoom-in spin-in-3">
+                                    {consensusLabel === "Buy" ? "🚀" : consensusLabel === "Sell" ? "📉" : "⚖️"}
+                                </div>
 
-                        <div className="w-full pt-4 border-t border-border">
-                            <p className="text-sm text-muted-foreground mb-1">Overall Recommendation</p>
-                            <div className={`text-3xl font-black ${consensusColor}`}>{consensusLabel}</div>
-                            <div className="flex justify-center gap-4 mt-4 text-xs font-medium">
-                                <div className="text-green-500 flex flex-col">
-                                    <span className="text-lg">{data.consensus?.buy || 0}</span>
-                                    <span>BUY</span>
+                                <div className="w-full pt-4 border-t border-border">
+                                    <p className="text-sm text-muted-foreground mb-1">Overall Recommendation</p>
+                                    <div className={`text-3xl font-black ${consensusColor}`}>{consensusLabel}</div>
+                                    <div className="flex justify-center gap-4 mt-4 text-xs font-medium">
+                                        <div className="text-green-500 flex flex-col">
+                                            <span className="text-lg">{data.consensus?.buy || 0}</span>
+                                            <span>BUY</span>
+                                        </div>
+                                        <div className="text-yellow-500 flex flex-col">
+                                            <span className="text-lg">{data.consensus?.hold || 0}</span>
+                                            <span>HOLD</span>
+                                        </div>
+                                        <div className="text-red-500 flex flex-col">
+                                            <span className="text-lg">{data.consensus?.sell || 0}</span>
+                                            <span>SELL</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-yellow-500 flex flex-col">
-                                    <span className="text-lg">{data.consensus?.hold || 0}</span>
-                                    <span>HOLD</span>
-                                </div>
-                                <div className="text-red-500 flex flex-col">
-                                    <span className="text-lg">{data.consensus?.sell || 0}</span>
-                                    <span>SELL</span>
+                            </div>
+
+                            {/* Price Targets Card */}
+                            <div className="glass rounded-xl shadow-lg p-6 space-y-4">
+                                <h3 className="text-lg font-bold flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Price Targets</h3>
+                                <div className="space-y-3">
+                                    <TargetRow label="High" value={data.targets?.high} currency={data.currency} />
+                                    <TargetRow label="Mean" value={data.targets?.mean} currency={data.currency} highlight />
+                                    <TargetRow label="Low" value={data.targets?.low} currency={data.currency} />
+                                    <div className="border-t border-border pt-2 mt-2">
+                                        <TargetRow label="Current" value={data.targets?.current} currency={data.currency} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Price Targets Card */}
-                    <div className="glass rounded-xl shadow-lg p-6 space-y-4">
-                        <h3 className="text-lg font-bold flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Price Targets</h3>
-                        <div className="space-y-3">
-                            <TargetRow label="High" value={data.targets?.high} currency={data.currency} />
-                            <TargetRow label="Mean" value={data.targets?.mean} currency={data.currency} highlight />
-                            <TargetRow label="Low" value={data.targets?.low} currency={data.currency} />
-                            <div className="border-t border-border pt-2 mt-2">
-                                <TargetRow label="Current" value={data.targets?.current} currency={data.currency} />
+                        {/* Financial Ratios */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-bold">Financial Ratios</h3>
+                                <button
+                                    onClick={handleExport}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-xs font-medium"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    Export
+                                </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Ratios & Analyst Feed */}
-                <div className="lg:col-span-2 space-y-8">
-                    {/* Financial Ratios */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-2xl font-bold">Financial Ratios</h3>
-                            <button
-                                onClick={handleExport}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
-                            >
-                                <Download className="w-4 h-4" />
-                                Export Analysis
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <RatioCard title="Price to Book" value={data.priceToBook?.toFixed(2)} description="Market value relative to book value." />
-                            <RatioCard title="Debt to Equity" value={data.debtToEquity?.toFixed(2)} description="Proportion of equity and debt used to finance assets." />
-                            <RatioCard title="Return on Equity" value={data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A'} description="Profitability relative to shareholder equity." />
-                            <RatioCard title="Current Ratio" value={data.currentRatio?.toFixed(2)} description="Ability to pay short-term obligations." />
+                            <div className="grid grid-cols-1 gap-3">
+                                <RatioCard title="Price to Book" value={data.priceToBook?.toFixed(2)} description="Market value relative to book value." />
+                                <RatioCard title="Debt to Equity" value={data.debtToEquity?.toFixed(2)} description="Proportion of equity and debt used to finance assets." />
+                                <RatioCard title="Return on Equity" value={data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A'} description="Profitability relative to shareholder equity." />
+                                <RatioCard title="Current Ratio" value={data.currentRatio?.toFixed(2)} description="Ability to pay short-term obligations." />
+                            </div>
                         </div>
                     </div>
 
@@ -264,6 +267,11 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Right Column: Company Bio (40%) */}
+                <div className="lg:col-span-2">
+                    <CompanyInfo data={data} />
                 </div>
             </div>
         </motion.div>

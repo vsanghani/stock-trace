@@ -2,13 +2,34 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, X } from "lucide-react"
+import { Menu, X, ChevronDown, FlaskConical } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MarketClock } from "@/components/market-clock"
 import { ThemeToggle } from "@/components/theme-toggle"
 
+const EXPERIMENTS = [
+    { href: "/senlogic", label: "senLogic", description: "Sentiment Analysis" },
+    { href: "/stress-test", label: "Stress Test", description: "Portfolio Scenarios" },
+    { href: "/correlation", label: "Correlation", description: "Heatmap Analysis" },
+    { href: "/whisper-alerts", label: "Whisper Alerts", description: "Smart Notifications" },
+]
+
 export function Navbar() {
     const [isOpen, setIsOpen] = React.useState(false)
+    const [experimentsOpen, setExperimentsOpen] = React.useState(false)
+    const [mobileExperimentsOpen, setMobileExperimentsOpen] = React.useState(false)
+    const experimentsRef = React.useRef<HTMLDivElement>(null)
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (experimentsRef.current && !experimentsRef.current.contains(event.target as Node)) {
+                setExperimentsOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/60 backdrop-blur-md border-b border-border/50 transition-all duration-300">
@@ -29,9 +50,50 @@ export function Navbar() {
                 <Link href="/pnl-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     PnL Calculator
                 </Link>
-                <Link href="/senlogic" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    senLogic
-                </Link>
+
+                {/* xperiments Dropdown */}
+                <div ref={experimentsRef} className="relative">
+                    <button
+                        onClick={() => setExperimentsOpen(!experimentsOpen)}
+                        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-secondary/50"
+                    >
+                        <FlaskConical className="w-4 h-4" />
+                        xperiments
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${experimentsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                        {experimentsOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute top-full right-0 mt-2 w-56 py-2 rounded-xl glass-strong"
+                            >
+                                {/* Glass shimmer overlay */}
+                                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
+
+                                {EXPERIMENTS.map((item) => (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        onClick={() => setExperimentsOpen(false)}
+                                        className="relative flex flex-col px-4 py-2.5 hover:bg-foreground/5 transition-colors"
+                                    >
+                                        <span className="text-sm font-semibold text-foreground">
+                                            {item.label}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {item.description}
+                                        </span>
+                                    </Link>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
                 <div className="h-4 w-px bg-border/50" />
                 <MarketClock />
                 <ThemeToggle />
@@ -76,13 +138,45 @@ export function Navbar() {
                             >
                                 PnL Calculator
                             </Link>
-                            <Link
-                                href="/senlogic"
-                                onClick={() => setIsOpen(false)}
-                                className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
-                            >
-                                senLogic
-                            </Link>
+
+                            {/* Mobile xperiments Section */}
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => setMobileExperimentsOpen(!mobileExperimentsOpen)}
+                                    className="flex items-center gap-2 text-2xl font-bold tracking-tight text-primary"
+                                >
+                                    <FlaskConical className="w-6 h-6" />
+                                    xperiments
+                                    <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${mobileExperimentsOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {mobileExperimentsOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden mt-3 ml-4 pl-4 border-l-2 border-primary/30 space-y-3"
+                                        >
+                                            {EXPERIMENTS.map((item) => (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    onClick={() => setIsOpen(false)}
+                                                    className="block"
+                                                >
+                                                    <span className="text-xl font-semibold hover:text-primary transition-colors">
+                                                        {item.label}
+                                                    </span>
+                                                    <span className="block text-sm text-muted-foreground">
+                                                        {item.description}
+                                                    </span>
+                                                </Link>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
 
                         <div className="mt-8">
