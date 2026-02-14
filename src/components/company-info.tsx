@@ -109,7 +109,7 @@ export function CompanyInfo({ data }: CompanyInfoProps) {
                         <h3 className="text-xl font-bold">Leadership & Senior Management</h3>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {data.companyOfficers!.map((officer, i) => (
                             <motion.div
                                 key={i}
@@ -122,11 +122,11 @@ export function CompanyInfo({ data }: CompanyInfoProps) {
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-blue-500/20 flex items-center justify-center text-sm font-bold text-primary/80 shrink-0">
                                     {getInitials(officer.name)}
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors break-words">
                                         {officer.name}
                                     </p>
-                                    <p className="text-xs text-muted-foreground truncate">
+                                    <p className="text-xs text-muted-foreground break-words">
                                         {officer.title}
                                     </p>
                                     {officer.age && (
