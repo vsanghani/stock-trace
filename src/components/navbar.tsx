@@ -50,6 +50,9 @@ export function Navbar() {
                 <Link href="/pnl-calculator" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     PnL Calculator
                 </Link>
+                <Link href="/options" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Options
+                </Link>
 
                 {/* xperiments Dropdown */}
                 <div ref={experimentsRef} className="relative">
@@ -137,6 +140,13 @@ export function Navbar() {
                                 className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
                             >
                                 PnL Calculator
+                            </Link>
+                            <Link
+                                href="/options"
+                                onClick={() => setIsOpen(false)}
+                                className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
+                            >
+                                Options
                             </Link>
 
                             {/* Mobile xperiments Section */}
