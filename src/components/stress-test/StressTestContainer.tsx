@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Trash2, Play, RotateCcw, Briefcase } from "lucide-react"
+import { Plus, Trash2, Play, RotateCcw, Briefcase, Link2, Check } from "lucide-react"
 import { StressScenario, StressTestResult, SECTOR_OPTIONS, Sector } from "@/types/stress-test"
 import { calculateStressImpact, formatCurrency } from "@/lib/stress-calculator"
 import { useHoldingsStore } from "./useHoldingsStore"
@@ -10,9 +11,63 @@ import { ScenarioSelector } from "./ScenarioSelector"
 import { ImpactVisualization } from "./ImpactVisualization"
 import { RiskAlert } from "./RiskAlert"
 import { cn } from "@/lib/utils"
+import { decodeStressPortfolio, encodeStressPortfolio } from "@/lib/url-portfolio-codec"
 
 export function StressTestContainer() {
-    const { holdings, addHolding, deleteHolding, clearAllHoldings, getTotalValue, isLoaded } = useHoldingsStore()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const pathname = usePathname()
+    const { holdings, addHolding, deleteHolding, clearAllHoldings, importHoldings, getTotalValue, isLoaded } =
+        useHoldingsStore()
+    const skipUrlSyncRef = React.useRef(false)
+    const lastAppliedParamRef = React.useRef<string | null>(null)
+    const [linkCopied, setLinkCopied] = React.useState(false)
+
+    React.useLayoutEffect(() => {
+        if (!isLoaded) return
+        const p = searchParams.get("p")
+        if (!p) {
+            lastAppliedParamRef.current = null
+            return
+        }
+        if (p === lastAppliedParamRef.current) return
+        const decoded = decodeStressPortfolio(p)
+        if (decoded?.length) {
+            importHoldings(decoded)
+            lastAppliedParamRef.current = p
+            skipUrlSyncRef.current = true
+        }
+    }, [isLoaded, searchParams, importHoldings])
+
+    React.useEffect(() => {
+        if (!isLoaded) return
+        if (skipUrlSyncRef.current) {
+            skipUrlSyncRef.current = false
+            return
+        }
+        const t = window.setTimeout(() => {
+            if (holdings.length === 0) {
+                router.replace(pathname, { scroll: false })
+            } else {
+                const enc = encodeStressPortfolio(holdings)
+                router.replace(`${pathname}?p=${encodeURIComponent(enc)}`, { scroll: false })
+            }
+        }, 350)
+        return () => window.clearTimeout(t)
+    }, [holdings, isLoaded, router, pathname])
+
+    const copyShareLink = async () => {
+        if (holdings.length === 0) return
+        const enc = encodeStressPortfolio(holdings)
+        const url = `${window.location.origin}${pathname}?p=${encodeURIComponent(enc)}`
+        try {
+            await navigator.clipboard.writeText(url)
+            setLinkCopied(true)
+            window.setTimeout(() => setLinkCopied(false), 2000)
+        } catch {
+            /* ignore */
+        }
+    }
     const [selectedScenario, setSelectedScenario] = React.useState<StressScenario | null>(null)
     const [result, setResult] = React.useState<StressTestResult | null>(null)
     const [isSimulating, setIsSimulating] = React.useState(false)
@@ -68,12 +123,27 @@ export function StressTestContainer() {
         <div className="space-y-8">
             {/* Portfolio Holdings Section */}
             <section className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <Briefcase className="w-5 h-5" />
                         Your Holdings
                     </h2>
                     <div className="flex items-center gap-2">
+                        {holdings.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={copyShareLink}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border/60 bg-secondary/40 hover:bg-secondary/70 transition-colors"
+                                title="Copy bookmarkable link"
+                            >
+                                {linkCopied ? (
+                                    <Check className="w-4 h-4 text-green-500" />
+                                ) : (
+                                    <Link2 className="w-4 h-4" />
+                                )}
+                                {linkCopied ? "Copied" : "Copy link"}
+                            </button>
+                        )}
                         {holdings.length > 0 && (
                             <button
                                 onClick={clearAllHoldings}

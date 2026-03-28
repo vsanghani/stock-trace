@@ -84,6 +84,18 @@ export function WhisperContainer() {
 
     return (
         <div className="space-y-8">
+            <div
+                className="flex gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3 text-sm text-muted-foreground"
+                role="note"
+            >
+                <AlertCircle className="w-5 h-5 shrink-0 text-amber-500/90" />
+                <p>
+                    Alerts run only in this browser session. Closing the tab stops checks; use{" "}
+                    <span className="font-medium text-foreground/90">Check Alerts</span> for on-demand evaluation.
+                    There is no background or off-device notification today.
+                </p>
+            </div>
+
             {/* Header Actions */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

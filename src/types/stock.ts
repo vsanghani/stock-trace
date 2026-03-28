@@ -2,6 +2,14 @@ export interface StockData {
     symbol: string
     shortName: string
     currency: string
+    /** True when Yahoo returned a reduced module set (degraded quote) */
+    quotePartial?: boolean
+    /** Human-readable degradation notes from the server */
+    quoteNotes?: string[]
+    /** Yahoo quote session (e.g. REGULAR, CLOSED, PRE, POST) */
+    marketState?: string
+    /** Primary listing name when available */
+    exchangeName?: string
     regularMarketPrice: number
     regularMarketChange: number
     regularMarketChangePercent: number
