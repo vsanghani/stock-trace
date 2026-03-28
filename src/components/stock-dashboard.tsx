@@ -2,10 +2,12 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History } from "lucide-react"
+import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History, Clock } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
 import { StockData } from "@/types/stock"
 import { SentimentBadge } from "@/components/SentimentBadge"
 import { CompanyInfo } from "@/components/company-info"
+import { formatMarketStateLabel } from "@/lib/market-session-label"
 
 interface StockDashboardProps {
     ticker: string
@@ -15,11 +17,13 @@ export function StockDashboard({ ticker }: StockDashboardProps) {
     const [data, setData] = React.useState<StockData | null>(null)
     const [loading, setLoading] = React.useState(true)
     const [error, setError] = React.useState<string | null>(null)
+    const [lastFetchedAt, setLastFetchedAt] = React.useState<Date | null>(null)
 
     React.useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
             setError(null)
+            setLastFetchedAt(null)
             try {
                 const res = await fetch(`/api/stock?ticker=${encodeURIComponent(ticker)}`)
                 const json = await res.json()
@@ -29,6 +33,7 @@ export function StockDashboard({ ticker }: StockDashboardProps) {
                 }
 
                 setData(json)
+                setLastFetchedAt(new Date())
             } catch (err: any) {
                 setError(err.message)
             } finally {
@@ -96,6 +101,13 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
 
     const isPositive = (data.regularMarketChangePercent || 0) >= 0
 
+    const sessionDotClass =
+        data.marketState === "REGULAR"
+            ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+            : data.marketState === "CLOSED"
+              ? "bg-red-500/90 shadow-[0_0_8px_rgba(239,68,68,0.4)]"
+              : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.45)]"
+
     // Calculate Consensus Summary
     const totalRatings = (data.consensus?.buy || 0) + (data.consensus?.strongBuy || 0) + (data.consensus?.hold || 0) + (data.consensus?.sell || 0) + (data.consensus?.strongSell || 0);
     const buyPercentage = totalRatings > 0 ? ((data.consensus?.buy || 0) + (data.consensus?.strongBuy || 0)) / totalRatings * 100 : 0;
@@ -123,6 +135,25 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                     <div>
                         <h2 className="text-4xl font-bold tracking-tight">{data.symbol}</h2>
                         <p className="text-muted-foreground text-lg">{data.shortName}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                        {lastFetchedAt && (
+                            <span className="inline-flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                                Loaded {formatDistanceToNow(lastFetchedAt, { addSuffix: true })}
+                            </span>
+                        )}
+                        {data.marketState && (
+                            <span className="inline-flex items-center gap-2">
+                                <span className={`h-2 w-2 shrink-0 rounded-full ${sessionDotClass}`} />
+                                {formatMarketStateLabel(data.marketState)}
+                            </span>
+                        )}
+                        {data.exchangeName && (
+                            <span className="text-xs font-medium uppercase tracking-wide opacity-80">
+                                {data.exchangeName}
+                            </span>
+                        )}
                     </div>
                     <SentimentBadge ticker={ticker} />
                 </div>

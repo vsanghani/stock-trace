@@ -1,15 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Trash2, Grid3X3, Briefcase, Sparkles } from "lucide-react"
-import {
-    CorrelationHolding,
-    CorrelationMatrix,
-    Sector,
-    Industry,
-    INDUSTRY_BY_SECTOR
-} from "@/types/correlation"
+import { Plus, Trash2, Grid3X3, Briefcase, Sparkles, Link2, Check } from "lucide-react"
+import { CorrelationMatrix, Sector, Industry, INDUSTRY_BY_SECTOR } from "@/types/correlation"
 import {
     calculateCorrelationMatrix,
     generateDiversificationTips
@@ -18,6 +13,7 @@ import { useCorrelationStore } from "./useCorrelationStore"
 import { HeatmapGrid } from "./HeatmapGrid"
 import { RiskInsights } from "./RiskInsights"
 import { cn } from "@/lib/utils"
+import { decodeCorrelationPortfolio, encodeCorrelationPortfolio } from "@/lib/url-portfolio-codec"
 
 const SECTOR_OPTIONS: Sector[] = [
     'Technology',
@@ -34,7 +30,14 @@ const SECTOR_OPTIONS: Sector[] = [
 ]
 
 export function CorrelationHeatmap() {
-    const { holdings, addHolding, deleteHolding, clearAllHoldings, isLoaded } = useCorrelationStore()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const pathname = usePathname()
+    const { holdings, addHolding, deleteHolding, clearAllHoldings, importHoldings, isLoaded } =
+        useCorrelationStore()
+    const skipUrlSyncRef = React.useRef(false)
+    const lastAppliedParamRef = React.useRef<string | null>(null)
+    const [linkCopied, setLinkCopied] = React.useState(false)
     const [showAddForm, setShowAddForm] = React.useState(false)
     const [matrix, setMatrix] = React.useState<CorrelationMatrix | null>(null)
     const [isAnalyzing, setIsAnalyzing] = React.useState(false)
@@ -57,6 +60,52 @@ export function CorrelationHeatmap() {
             setFormData(prev => ({ ...prev, industry: industries[0] }))
         }
     }, [formData.sector])
+
+    React.useLayoutEffect(() => {
+        if (!isLoaded) return
+        const p = searchParams.get("p")
+        if (!p) {
+            lastAppliedParamRef.current = null
+            return
+        }
+        if (p === lastAppliedParamRef.current) return
+        const decoded = decodeCorrelationPortfolio(p)
+        if (decoded?.length) {
+            importHoldings(decoded)
+            lastAppliedParamRef.current = p
+            skipUrlSyncRef.current = true
+        }
+    }, [isLoaded, searchParams, importHoldings])
+
+    React.useEffect(() => {
+        if (!isLoaded) return
+        if (skipUrlSyncRef.current) {
+            skipUrlSyncRef.current = false
+            return
+        }
+        const t = window.setTimeout(() => {
+            if (holdings.length === 0) {
+                router.replace(pathname, { scroll: false })
+            } else {
+                const enc = encodeCorrelationPortfolio(holdings)
+                router.replace(`${pathname}?p=${encodeURIComponent(enc)}`, { scroll: false })
+            }
+        }, 350)
+        return () => window.clearTimeout(t)
+    }, [holdings, isLoaded, router, pathname])
+
+    const copyShareLink = async () => {
+        if (holdings.length === 0) return
+        const enc = encodeCorrelationPortfolio(holdings)
+        const url = `${window.location.origin}${pathname}?p=${encodeURIComponent(enc)}`
+        try {
+            await navigator.clipboard.writeText(url)
+            setLinkCopied(true)
+            window.setTimeout(() => setLinkCopied(false), 2000)
+        } catch {
+            /* ignore */
+        }
+    }
 
     const handleAddHolding = (e: React.FormEvent) => {
         e.preventDefault()
@@ -95,12 +144,27 @@ export function CorrelationHeatmap() {
         <div className="space-y-8">
             {/* Holdings Input Section */}
             <section className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <Briefcase className="w-5 h-5" />
                         Portfolio Holdings
                     </h2>
                     <div className="flex items-center gap-2">
+                        {holdings.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={copyShareLink}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border/60 bg-secondary/40 hover:bg-secondary/70 transition-colors"
+                                title="Copy bookmarkable link"
+                            >
+                                {linkCopied ? (
+                                    <Check className="w-4 h-4 text-green-500" />
+                                ) : (
+                                    <Link2 className="w-4 h-4" />
+                                )}
+                                {linkCopied ? "Copied" : "Copy link"}
+                            </button>
+                        )}
                         {holdings.length > 0 && (
                             <button
                                 onClick={() => {

@@ -49,6 +49,8 @@ export async function GET(request: Request) {
             symbol: price.symbol || ticker,
             shortName: price.shortName || ticker,
             currency: price.currency,
+            marketState: price.marketState ?? undefined,
+            exchangeName: (price.fullExchangeName || price.exchangeName) ?? undefined,
             regularMarketPrice: price.regularMarketPrice,
             regularMarketChange: price.regularMarketChange,
             regularMarketChangePercent: price.regularMarketChangePercent,

@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion"
 interface StockSearchProps {
     onSearch: (query: string) => void
     isLoading?: boolean
+    /** When set from the URL (e.g. `?ticker=`), keeps the input aligned for bookmarks and back/forward */
+    syncedSymbol?: string | null
 }
 
 interface Suggestion {
@@ -17,10 +19,15 @@ interface Suggestion {
     type: string
 }
 
-export function StockSearch({ onSearch, isLoading }: StockSearchProps) {
+export function StockSearch({ onSearch, isLoading, syncedSymbol }: StockSearchProps) {
     const [query, setQuery] = React.useState("")
     const [suggestions, setSuggestions] = React.useState<Suggestion[]>([])
     const [showSuggestions, setShowSuggestions] = React.useState(false)
+
+    React.useEffect(() => {
+        if (syncedSymbol === undefined) return
+        setQuery(syncedSymbol ? syncedSymbol : "")
+    }, [syncedSymbol])
 
     // Custom debounce implementation inside component to avoid extra file for now
     const [debouncedQuery, setDebouncedQuery] = React.useState(query)

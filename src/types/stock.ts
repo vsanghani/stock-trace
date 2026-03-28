@@ -2,6 +2,10 @@ export interface StockData {
     symbol: string
     shortName: string
     currency: string
+    /** Yahoo quote session (e.g. REGULAR, CLOSED, PRE, POST) */
+    marketState?: string
+    /** Primary listing name when available */
+    exchangeName?: string
     regularMarketPrice: number
     regularMarketChange: number
     regularMarketChangePercent: number

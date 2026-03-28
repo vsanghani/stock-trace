@@ -22,9 +22,10 @@ export default function WhisperAlertsPage() {
                         Whisper Alerts
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                        Multi-variable logic alerts that filter out market noise. Get notified only when
-                        specific high-conviction conditions are met—like divergence signals, volume surges,
-                        or cross-asset correlations.
+                        Multi-variable logic alerts that filter out market noise. Conditions are evaluated in
+                        this browser while Stock Trace is open—there is no server-side monitoring, email, or
+                        push delivery yet. Keep the tab running and use{" "}
+                        <span className="font-medium text-foreground/90">Check Alerts</span> to refresh evaluations.
                     </p>
                 </div>
 
