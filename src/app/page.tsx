@@ -11,12 +11,15 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const ticker = searchParams.get("ticker")
-  const [isSearchPending, startSearchTransition] = React.useTransition()
+  const [loading, setLoading] = React.useState(false)
 
-  const handleSearch = (query: string) => {
-    startSearchTransition(() => {
-      router.push(`/?ticker=${encodeURIComponent(query)}`)
-    })
+  const handleSearch = async (query: string) => {
+    setLoading(true)
+    // Simulate API call for now
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Update the URL query param
+    router.push(`/?ticker=${encodeURIComponent(query)}`)
+    setLoading(false)
   }
 
   return (
@@ -40,11 +43,7 @@ function HomeContent() {
             </div>
 
             <div className="space-y-6 w-full flex flex-col items-center">
-              <StockSearch
-                onSearch={handleSearch}
-                isLoading={isSearchPending}
-                syncedSymbol={ticker}
-              />
+              <StockSearch onSearch={handleSearch} isLoading={loading} />
               {/* Removed Risk Selector */}
             </div>
           </motion.div>
@@ -57,11 +56,7 @@ function HomeContent() {
           >
             <div className="flex flex-col w-full items-center gap-4">
               <div className="w-full max-w-xl flex flex-col gap-4">
-                <StockSearch
-                  onSearch={handleSearch}
-                  isLoading={isSearchPending}
-                  syncedSymbol={ticker}
-                />
+                <StockSearch onSearch={handleSearch} isLoading={loading} />
                 <div className="flex justify-center">
                   {/* Removed Risk Selector */}
                 </div>

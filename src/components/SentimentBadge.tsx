@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Activity, AlertTriangle } from "lucide-react"
+import { Activity } from "lucide-react"
 import { SentimentResult, getSentimentColor } from "@/types/sentiment"
 import { cn } from "@/lib/utils"
 
@@ -76,30 +76,15 @@ export function SentimentBadge({ ticker, className }: SentimentBadgeProps) {
     const color = getSentimentColor(sentiment.score)
     const glowColor = `${color}40` // 25% opacity for glow
 
-    const showDemoBanner = sentiment.isResearchGrade !== true
-
     return (
         <motion.div
-            className={cn("relative inline-flex flex-col items-start gap-2", className)}
+            className={cn("relative inline-flex", className)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             layout
         >
-            {showDemoBanner && (
-                <div
-                    className="flex items-start gap-2 max-w-md rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90"
-                    role="status"
-                >
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
-                    <span>
-                        <span className="font-semibold text-amber-100">Demo / not live research.</span>{" "}
-                        Headlines or scoring are synthetic or degraded (missing API keys or upstream errors).
-                        Do not use for trading or publication.
-                    </span>
-                </div>
-            )}
             <motion.div
-                className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer overflow-hidden self-start"
+                className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer overflow-hidden"
                 style={{
                     background: 'rgba(10, 10, 12, 0.7)',
                     backdropFilter: 'blur(16px)',
@@ -185,12 +170,6 @@ export function SentimentBadge({ ticker, className }: SentimentBadgeProps) {
                         <p className="text-xs text-muted-foreground leading-relaxed">
                             {sentiment.reason}
                         </p>
-                        {sentiment.dataProvenance && (
-                            <p className="text-[10px] text-muted-foreground/70 mt-2 font-mono">
-                                News: {sentiment.dataProvenance.headlinesSource} · Model:{" "}
-                                {sentiment.dataProvenance.analysisSource}
-                            </p>
-                        )}
                         {sentiment.updatedAt && (
                             <p className="text-xs text-muted-foreground/60 mt-2">
                                 Updated: {new Date(sentiment.updatedAt).toLocaleTimeString()}

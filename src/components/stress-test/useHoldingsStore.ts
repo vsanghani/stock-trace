@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { PortfolioHolding } from "@/types/stress-test"
 
 const STORAGE_KEY = "stock-trace-stress-holdings"
@@ -51,16 +51,6 @@ export function useHoldingsStore() {
         setHoldings([])
     }
 
-    /** Replace all holdings (e.g. from a shared URL); assigns new ids */
-    const importHoldings = useCallback((rows: Omit<PortfolioHolding, "id">[]) => {
-        setHoldings(
-            rows.map((h) => ({
-                ...h,
-                id: crypto.randomUUID(),
-            }))
-        )
-    }, [])
-
     const getTotalValue = () => {
         return holdings.reduce((sum, h) => sum + h.shares * h.currentPrice, 0)
     }
@@ -71,7 +61,6 @@ export function useHoldingsStore() {
         updateHolding,
         deleteHolding,
         clearAllHoldings,
-        importHoldings,
         getTotalValue,
         isLoaded,
     }

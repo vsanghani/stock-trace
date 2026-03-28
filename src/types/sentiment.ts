@@ -1,21 +1,9 @@
-export type SentimentHeadlinesSource = "alphavantage" | "synthetic_demo"
-export type SentimentAnalysisSource = "openrouter" | "synthetic_demo" | "error_fallback"
-
-export interface SentimentDataProvenance {
-    headlinesSource: SentimentHeadlinesSource
-    analysisSource: SentimentAnalysisSource
-}
-
 export interface SentimentResult {
     score: number // 0-100 (0 = extreme panic, 100 = extreme euphoria)
     label: 'Strong Bearish' | 'Bearish' | 'Neutral' | 'Bullish' | 'Strong Bullish'
     reason: string
     updatedAt: string // ISO timestamp
     headlines?: NewsHeadline[]
-    /** How headlines and scores were produced (for UI disclosure) */
-    dataProvenance?: SentimentDataProvenance
-    /** True only when live news + LLM were both used successfully */
-    isResearchGrade?: boolean
 }
 
 export interface NewsHeadline {

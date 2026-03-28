@@ -188,25 +188,6 @@ export default function SenLogicPage() {
                     </div>
                 </section>
 
-                <section className="space-y-4">
-                    <h2 className="text-2xl font-bold flex items-center gap-3">
-                        <Shield className="w-6 h-6 text-amber-500/90" />
-                        Live data vs demo mode
-                    </h2>
-                    <div className="glass rounded-xl p-6 border border-amber-500/20 bg-amber-500/5">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                            Research-grade scores require configured{" "}
-                            <span className="font-mono text-xs text-foreground/90">ALPHA_VANTAGE_API_KEY</span>{" "}
-                            (headlines) and{" "}
-                            <span className="font-mono text-xs text-foreground/90">OPENROUTER_API_KEY</span>{" "}
-                            (LLM analysis). Without them—or when those APIs fail—the app uses{" "}
-                            <span className="text-foreground font-medium">synthetic demo headlines and placeholder scoring</span>.
-                            The dashboard shows an amber notice whenever output is not research-grade; treat those
-                            results as illustrations only.
-                        </p>
-                    </div>
-                </section>
-
                 {/* Disclaimer */}
                 <section className="space-y-4">
                     <h2 className="text-2xl font-bold flex items-center gap-3">

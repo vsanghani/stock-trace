@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { CorrelationHolding, Sector, Industry } from "@/types/correlation"
 
 const STORAGE_KEY = "stock-trace-correlation-holdings"
@@ -51,23 +51,12 @@ export function useCorrelationStore() {
         setHoldings([])
     }
 
-    /** Replace all holdings (e.g. from a shared URL); assigns new ids */
-    const importHoldings = useCallback((rows: Omit<CorrelationHolding, "id">[]) => {
-        setHoldings(
-            rows.map((h) => ({
-                ...h,
-                id: crypto.randomUUID(),
-            }))
-        )
-    }, [])
-
     return {
         holdings,
         addHolding,
         updateHolding,
         deleteHolding,
         clearAllHoldings,
-        importHoldings,
         isLoaded,
     }
 }
