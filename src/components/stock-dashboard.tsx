@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History, Clock } from "lucide-react"
+import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History, Clock, AlertTriangle } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { StockData } from "@/types/stock"
 import { SentimentBadge } from "@/components/SentimentBadge"
@@ -129,6 +129,28 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
             animate={{ opacity: 1 }}
             className="w-full max-w-7xl mx-auto space-y-8 pb-12"
         >
+            {(data.quotePartial || (data.quoteNotes && data.quoteNotes.length > 0)) && (
+                <div
+                    className="flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-muted-foreground"
+                    role="status"
+                >
+                    <AlertTriangle className="w-5 h-5 shrink-0 text-amber-500/90" />
+                    <div className="space-y-1">
+                        <p className="font-medium text-foreground/90">Partial quote</p>
+                        <p>
+                            Some Yahoo Finance modules were unavailable. Figures below may omit analyst data,
+                            earnings, or fundamentals until the provider responds fully.
+                        </p>
+                        {data.quoteNotes && data.quoteNotes.length > 0 && (
+                            <ul className="list-disc pl-4 text-xs text-muted-foreground/90">
+                                {data.quoteNotes.map((n, i) => (
+                                    <li key={i}>{n}</li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+            )}
             {/* Header Section */}
             <div className="glass rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="space-y-3">
