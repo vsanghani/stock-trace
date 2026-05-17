@@ -38,7 +38,7 @@ function HomeContent() {
               <h1 className="text-6xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
                 {SITE_NAME}
               </h1>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
+              <p className="text-sm sm:text-base text-muted-foreground whitespace-nowrap">
                 {SITE_TAGLINE}
               </p>
             </div>
