@@ -1,11 +1,11 @@
-import { Metadata } from "next"
 import Link from "next/link"
 import { Activity, ArrowLeft, Zap, Brain, TrendingUp, Shield } from "lucide-react"
+import { pageMetadata, SITE_NAME } from "@/lib/site"
 
-export const metadata: Metadata = {
-    title: "senLogic - AI Sentiment Analysis | Stock Trace",
-    description: "Learn how The Signal uses AI-powered sentiment analysis to decode market emotions and provide actionable insights.",
-}
+export const metadata = pageMetadata(
+    "senLogic",
+    `Learn how The Signal on ${SITE_NAME} uses AI-powered sentiment analysis to decode market emotions and provide actionable insights.`
+)
 
 export default function SenLogicPage() {
     return (
@@ -17,7 +17,7 @@ export default function SenLogicPage() {
                     className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Dashboard
+                    Back to {SITE_NAME}
                 </Link>
 
                 {/* Hero Section */}

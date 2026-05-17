@@ -1,14 +1,15 @@
-import { getAllPosts, getAllTags } from '@/lib/blog';
-import BlogList from '@/components/blog/BlogList';
+import { getAllPosts, getAllTags } from "@/lib/blog"
+import BlogList from "@/components/blog/BlogList"
+import { pageMetadata, SITE_NAME } from "@/lib/site"
 
-export const metadata = {
-    title: 'Blog | Stock Trace',
-    description: 'Insights and updates from the Stock Trace team.',
-};
+export const metadata = pageMetadata(
+    "Blog",
+    `Insights and updates from the ${SITE_NAME} team.`
+)
 
 export default function BlogPage() {
-    const posts = getAllPosts();
-    const tags = getAllTags();
+    const posts = getAllPosts()
+    const tags = getAllTags()
 
     return (
         <div className="container mx-auto px-4 py-12 md:py-20 lg:py-24">
@@ -17,11 +18,11 @@ export default function BlogPage() {
                     Our <span className="text-amber-400">Blog</span>
                 </h1>
                 <p className="mt-4 text-lg text-muted-foreground">
-                    Latest news, updates, and technical deep dives from our team.
+                    Latest news, updates, and technical deep dives from the {SITE_NAME} team.
                 </p>
             </div>
 
             <BlogList initialPosts={posts} allTags={tags} />
         </div>
-    );
+    )
 }

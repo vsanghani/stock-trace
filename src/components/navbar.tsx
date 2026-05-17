@@ -6,6 +6,7 @@ import { Menu, X, ChevronDown, FlaskConical } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MarketClock } from "@/components/market-clock"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { SITE_NAME } from "@/lib/site"
 
 const EXPERIMENTS = [
     { href: "/senlogic", label: "senLogic", description: "Sentiment Analysis" },
@@ -35,7 +36,7 @@ export function Navbar() {
         <nav className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/60 backdrop-blur-md border-b border-border/50 transition-all duration-300">
             <Link href="/" className="z-50">
                 <div className="font-bold text-xl tracking-tighter px-3 py-1 rounded-lg border border-transparent hover:border-border/50 transition-colors">
-                    Stock Trace
+                    {SITE_NAME}
                 </div>
             </Link>
 

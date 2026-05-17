@@ -1,10 +1,11 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { notFound } from 'next/navigation';
-import { getPostBySlug, getPostSlugs } from '@/lib/blog';
-import { MDXRemote } from 'next-mdx-remote/rsc';
-import { format } from 'date-fns';
-import { ArrowLeft } from 'lucide-react';
+import Link from "next/link"
+import Image from "next/image"
+import { notFound } from "next/navigation"
+import { getPostBySlug, getPostSlugs } from "@/lib/blog"
+import { MDXRemote } from "next-mdx-remote/rsc"
+import { format } from "date-fns"
+import { ArrowLeft } from "lucide-react"
+import { SITE_NAME } from "@/lib/site"
 
 export async function generateStaticParams() {
     const posts = getPostSlugs();
@@ -24,13 +25,14 @@ export async function generateMetadata({ params }: Props) {
     try {
         const post = getPostBySlug(resolvedParams.slug);
         return {
-            title: `${post.frontmatter.title} | Stock Trace`,
+            title: post.frontmatter.title,
             description: post.frontmatter.excerpt,
-        };
-    } catch (e) {
+        }
+    } catch {
         return {
-            title: 'Blog Post Not Found',
-        };
+            title: "Blog Post Not Found",
+            description: `${SITE_NAME} blog article.`,
+        }
     }
 }
 
