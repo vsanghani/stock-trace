@@ -50,7 +50,7 @@ async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promis
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-                'X-Title': 'StockTrace Sentiment',
+                "X-Title": "Stock Trace Sentiment",
             },
             body: JSON.stringify({
                 model: 'google/gemini-2.0-flash-001',

@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { StockSearch } from "@/components/stock-search"
 import { StockDashboard } from "@/components/stock-dashboard"
 import { motion, AnimatePresence } from "framer-motion"
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/site"
 
 function HomeContent() {
   const searchParams = useSearchParams()
@@ -35,10 +36,10 @@ function HomeContent() {
           >
             <div className="space-y-4">
               <h1 className="text-6xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
-                Stock Trace
+                {SITE_NAME}
               </h1>
               <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-                Global market analysis. Real-time data for NYSE, NASDAQ, ASX, HKEX, JPX, LSE.
+                {SITE_TAGLINE}
               </p>
             </div>
 
