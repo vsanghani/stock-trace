@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 import { GridBackground } from "@/components/grid-background"
 import { rootMetadata } from "@/lib/site"
 
@@ -35,8 +36,11 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <GridBackground />
-                    <Navbar />
-                    <main className="pt-16 min-h-screen relative overflow-hidden">{children}</main>
+                    <div className="relative flex min-h-screen flex-col">
+                        <Navbar />
+                        <main className="flex-1 pt-16 relative overflow-hidden">{children}</main>
+                        <Footer />
+                    </div>
                 </ThemeProvider>
             </body>
         </html>
