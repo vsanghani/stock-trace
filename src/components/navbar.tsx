@@ -54,6 +54,9 @@ export function Navbar() {
                 <Link href="/options" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     Options
                 </Link>
+                <Link href="/valuation" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Valuation
+                </Link>
 
                 {/* xperiments Dropdown */}
                 <div ref={experimentsRef} className="relative">
@@ -148,6 +151,13 @@ export function Navbar() {
                                 className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
                             >
                                 Options
+                            </Link>
+                            <Link
+                                href="/valuation"
+                                onClick={() => setIsOpen(false)}
+                                className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
+                            >
+                                Valuation
                             </Link>
 
                             {/* Mobile xperiments Section */}
