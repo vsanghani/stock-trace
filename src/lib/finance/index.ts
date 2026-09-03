@@ -7,6 +7,9 @@
 export type {
     Action,
     BlackScholesInputs,
+    DcfAssumptions,
+    DcfInputs,
+    DcfResult,
     Greeks,
     Leg,
     OptionLeg,
@@ -15,9 +18,16 @@ export type {
     PayoffCurve,
     PayoffCurveOptions,
     PayoffPoint,
+    ProjectedYear,
+    SensitivityCell,
+    SensitivityMatrix,
+    SensitivityOptions,
     StockLeg,
     Strategy,
     StrategyType,
+    ValuationErrorCode,
+    ValuationVerdict,
+    ValuationWarningCode,
 } from "./types"
 
 export {
@@ -55,3 +65,22 @@ export {
     payoffAtPrice,
     stockLeg,
 } from "./payoff"
+
+export {
+    DEFAULT_DCF_ASSUMPTIONS,
+    DEFAULT_SENSITIVITY_OPTIONS,
+    FAIR_VALUE_BAND,
+    PROJECTION_YEARS,
+    VALUATION_MESSAGES,
+    buildSensitivityMatrix,
+    cagr,
+    calculateDcf,
+    calculateTerminalValue,
+    classifyVerdict,
+    discountFactor,
+    historicalGrowthRate,
+    marginOfSafety,
+    presentValue,
+    projectFreeCashFlows,
+    validateDcfInputs,
+} from "./valuation"

@@ -128,3 +128,108 @@ export interface Greeks {
     vega: number
     rho: number
 }
+
+/* ------------------------------------------------------------------ */
+/* Discounted cash flow valuation                                     */
+/* ------------------------------------------------------------------ */
+
+/** All rates are decimals, so 0.10 means 10%. */
+export interface DcfAssumptions {
+    /** Annual free cash flow growth applied across the projection horizon */
+    growthRate: number
+    /** Discount rate, typically WACC */
+    discountRate: number
+    /** Perpetual growth rate applied beyond the horizon */
+    terminalGrowthRate: number
+    /** Projection horizon in years, defaults to 5 */
+    years?: number
+}
+
+export interface DcfInputs {
+    /** Trailing twelve month or latest annual free cash flow, in dollars */
+    freeCashFlow: number
+    sharesOutstanding: number
+    /** Total debt minus cash; negative means net cash, which raises equity value */
+    netDebt: number
+    /** Current market price per share */
+    currentPrice: number
+    assumptions: DcfAssumptions
+}
+
+export interface ProjectedYear {
+    year: number
+    freeCashFlow: number
+    discountFactor: number
+    presentValue: number
+}
+
+export type ValuationVerdict = "undervalued" | "fairly-valued" | "overvalued"
+
+export type ValuationErrorCode =
+    | "invalid-free-cash-flow"
+    | "invalid-shares"
+    | "invalid-price"
+    | "invalid-growth-rate"
+    | "invalid-discount-rate"
+    | "terminal-growth-too-high"
+    | "invalid-horizon"
+
+export type ValuationWarningCode =
+    | "negative-free-cash-flow"
+    | "terminal-value-dominant"
+    | "narrow-discount-spread"
+    | "aggressive-growth"
+
+export interface DcfResult {
+    /** Projected free cash flow for each year of the horizon */
+    projections: ProjectedYear[]
+    /** Present value of the explicit projection period */
+    pvOfCashFlows: number
+    /** Undiscounted terminal value at the end of the horizon */
+    terminalValue: number
+    pvOfTerminalValue: number
+    enterpriseValue: number
+    equityValue: number
+    fairValuePerShare: number
+    currentPrice: number
+    /** Percentage points, so 25 means the fair value is 25% above the market price */
+    marginOfSafety: number
+    verdict: ValuationVerdict
+    /** Fraction of enterprise value contributed by the terminal value, 0 to 1 */
+    terminalValueWeight: number
+    warnings: ValuationWarningCode[]
+}
+
+export interface SensitivityOptions {
+    /** Number of steps either side of the base rate, defaults to 2 */
+    steps?: number
+    /** Growth rate spread at the furthest step, defaults to 0.04 */
+    growthSpread?: number
+    /** Discount rate spread at the furthest step, defaults to 0.02 */
+    discountSpread?: number
+}
+
+export interface SensitivityCell {
+    growthRate: number
+    discountRate: number
+    /** `null` when the assumptions make the model unsolvable */
+    fairValuePerShare: number | null
+    marginOfSafety: number | null
+    verdict: ValuationVerdict | null
+    /** True for the cell matching the user's current assumptions */
+    isBase: boolean
+}
+
+export interface SensitivityMatrix {
+    /** Column axis, ascending */
+    growthRates: number[]
+    /** Row axis, ascending */
+    discountRates: number[]
+    /** Indexed as `rows[discountRateIndex][growthRateIndex]` */
+    rows: SensitivityCell[][]
+    baseGrowthRate: number
+    baseDiscountRate: number
+    /** Extremes across solvable cells, for scaling a heatmap */
+    minFairValue: number | null
+    maxFairValue: number | null
+}
