@@ -2,7 +2,7 @@
  * Company fundamentals for the valuation analyzer.
  *
  * Yahoo Finance is the default provider because it needs no API key and already
- * backs the rest of Stock Trace. Setting `FMP_API_KEY` in `.env.local` switches
+ * backs the rest of Plutox. Setting `FMP_API_KEY` in `.env.local` switches
  * to Financial Modeling Prep, with Yahoo kept as a fallback. If every live
  * provider fails, frozen mock snapshots keep the page usable.
  *

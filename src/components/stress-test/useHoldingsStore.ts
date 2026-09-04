@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { PortfolioHolding } from "@/types/stress-test"
+import { readStoredValue } from "@/lib/storage"
 
-const STORAGE_KEY = "stock-trace-stress-holdings"
+const STORAGE_KEY = "plutox-stress-holdings"
 
 export function useHoldingsStore() {
     const [holdings, setHoldings] = useState<PortfolioHolding[]>([])
@@ -11,7 +12,7 @@ export function useHoldingsStore() {
 
     // Load from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY)
+        const saved = readStoredValue(STORAGE_KEY)
         if (saved) {
             try {
                 setHoldings(JSON.parse(saved))
