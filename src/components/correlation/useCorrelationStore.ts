@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { CorrelationHolding, Sector, Industry } from "@/types/correlation"
+import { readStoredValue } from "@/lib/storage"
 
-const STORAGE_KEY = "stock-trace-correlation-holdings"
+const STORAGE_KEY = "plutox-correlation-holdings"
 
 export function useCorrelationStore() {
     const [holdings, setHoldings] = useState<CorrelationHolding[]>([])
@@ -11,7 +12,7 @@ export function useCorrelationStore() {
 
     // Load from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY)
+        const saved = readStoredValue(STORAGE_KEY)
         if (saved) {
             try {
                 setHoldings(JSON.parse(saved))

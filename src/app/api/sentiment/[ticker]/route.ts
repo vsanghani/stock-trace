@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { SentimentResult, NewsHeadline, getSentimentLabel } from '@/types/sentiment'
+import { SITE_NAME } from '@/lib/site'
 
 interface RouteParams {
     params: Promise<{ ticker: string }>
@@ -50,7 +51,7 @@ async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promis
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-                "X-Title": "Stock Trace Sentiment",
+                "X-Title": `${SITE_NAME} Sentiment`,
             },
             body: JSON.stringify({
                 model: 'google/gemini-2.0-flash-001',

@@ -1,5 +1,5 @@
 /**
- * Pure financial maths for Stock Trace.
+ * Pure financial maths for Plutox.
  *
  * Import from `@/lib/finance` rather than reaching into individual modules.
  */

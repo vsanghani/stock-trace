@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 
+import { readStoredValue } from "@/lib/storage"
+
 export interface Trade {
     id: string
     date: string // YYYY-MM-DD
@@ -14,7 +16,7 @@ export interface Trade {
     notes?: string
 }
 
-const STORAGE_KEY = "stock-trace-pnl-data"
+const STORAGE_KEY = "plutox-pnl-data"
 
 export function usePnLStore() {
     const [trades, setTrades] = useState<Trade[]>([])
@@ -22,7 +24,7 @@ export function usePnLStore() {
 
     // Load from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY)
+        const saved = readStoredValue(STORAGE_KEY)
         if (saved) {
             try {
                 setTrades(JSON.parse(saved))

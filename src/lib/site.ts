@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 /** Public product name — use everywhere user-facing branding appears */
-export const SITE_NAME = "Stock Trace"
+export const SITE_NAME = "Plutox"
 
 export const SITE_DESCRIPTION =
     "Real-time stock research and analysis: live quotes, sentiment, options, and portfolio tools."
