@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { WhisperAlert } from "@/types/whisper-alert"
+import { readStoredValue } from "@/lib/storage"
 
-const STORAGE_KEY = "stock-trace-whisper-alerts"
+const STORAGE_KEY = "plutox-whisper-alerts"
 
 export function useWhisperStore() {
     const [alerts, setAlerts] = useState<WhisperAlert[]>([])
@@ -11,7 +12,7 @@ export function useWhisperStore() {
 
     // Load from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY)
+        const saved = readStoredValue(STORAGE_KEY)
         if (saved) {
             try {
                 setAlerts(JSON.parse(saved))

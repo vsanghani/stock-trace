@@ -1,8 +1,8 @@
-# Stock Trace
+# Plutox
 
 > **Internal Use Only** — This application is intended for internal staff. Do not distribute externally.
 
-Stock Trace is a real-time stock research and analysis dashboard. It provides live price data, company insights, sentiment analysis, and a suite of experimental tools including correlation heatmaps, portfolio stress testing, P&L tracking, and whisper alerts.
+Plutox is a real-time stock research and analysis dashboard. It provides live price data, company insights, sentiment analysis, and a suite of experimental tools including correlation heatmaps, portfolio stress testing, P&L tracking, and whisper alerts.
 
 ---
 
@@ -61,7 +61,7 @@ npm run lint
 ## File Structure
 
 ```
-stock-trace/
+plutox/
 ├── public/                          # Static assets (SVGs, icons)
 ├── src/
 │   ├── app/                         # Next.js App Router (pages & API)
