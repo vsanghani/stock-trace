@@ -116,7 +116,7 @@ export function CompanyInfo({ data }: CompanyInfoProps) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.05 * i }}
-                                className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] transition-all group"
+                                className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted border border-border/70 transition-all group"
                             >
                                 {/* Initials avatar */}
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-blue-500/20 flex items-center justify-center text-sm font-bold text-primary/80 shrink-0">
@@ -164,7 +164,7 @@ export function CompanyInfo({ data }: CompanyInfoProps) {
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="text-xs uppercase bg-white/5 text-muted-foreground border-b border-white/10">
+                            <thead className="text-xs uppercase bg-muted/70 text-muted-foreground border-b border-border">
                                 <tr>
                                     <th className="px-4 py-3">Quarter</th>
                                     <th className="px-4 py-3 text-right">EPS Actual</th>
@@ -173,7 +173,7 @@ export function CompanyInfo({ data }: CompanyInfoProps) {
                                     <th className="px-4 py-3 text-center">Result</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-border">
                                 {data.quarterlyEarnings!.map((q, i) => {
                                     const surprise = q.actual !== null && q.estimate !== null
                                         ? q.actual - q.estimate
@@ -181,7 +181,7 @@ export function CompanyInfo({ data }: CompanyInfoProps) {
                                     const beat = surprise !== null ? surprise >= 0 : null
 
                                     return (
-                                        <tr key={i} className="hover:bg-white/5 transition-colors">
+                                        <tr key={i} className="hover:bg-muted/60 transition-colors">
                                             <td className="px-4 py-3 font-medium font-mono">
                                                 {q.date || 'N/A'}
                                             </td>

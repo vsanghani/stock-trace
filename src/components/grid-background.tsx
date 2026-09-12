@@ -66,8 +66,8 @@ export function GridBackground() {
 
             const isDark = theme === "dark" || theme === "system"
 
-            const baseColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-            const activeColor = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.3)" // Reduced glow intensity
+            const baseColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.045)"
+            const activeColor = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.14)"
 
             const cols = Math.ceil(canvas.width / DOT_SPACING)
             const rows = Math.ceil(canvas.height / DOT_SPACING)

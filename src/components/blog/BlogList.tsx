@@ -86,7 +86,7 @@ export default function BlogList({ initialPosts, allTags }: BlogListProps) {
                             setSelectedTags([]);
                             setSearchQuery('');
                         }}
-                        className="mt-4 text-sm text-amber-400 hover:underline"
+                        className="mt-4 text-sm text-amber-700 dark:text-amber-400 hover:underline"
                     >
                         Clear filters
                     </button>

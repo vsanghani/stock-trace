@@ -25,20 +25,20 @@
 }
 
 :root {
-  --background: #f4f4f5;
-  --foreground: #09090b;
+  --background: #f8f8f9;
+  --foreground: #18181b;
   --primary: #18181b;
   --primary-foreground: #fafafa;
-  --secondary: #e4e4e7;
+  --secondary: #ececee;
   --secondary-foreground: #18181b;
-  --muted: #e4e4e7;
-  --muted-foreground: #71717a;
-  --accent: #e4e4e7;
+  --muted: #ececee;
+  --muted-foreground: #3f3f46;
+  --accent: #ececee;
   --accent-foreground: #18181b;
-  --destructive: #ef4444;
+  --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
+  --border: #d4d4d8;
+  --input: #d4d4d8;
   --ring: #18181b;
   --radius: 0.5rem;
 }
@@ -67,13 +67,39 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* Theme-aware article body — light mode stays dark-on-light; invert only in dark. */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: #b45309;
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-kbd: var(--foreground);
+  --tw-prose-kbd-shadows: 24 24 27;
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}
+
+.dark .prose {
+  --tw-prose-links: #fbbf24;
+}
+
 /* Glassmorphism Utilities - Enhanced */
 .glass {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(24, 24, 27, 0.12);
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.1), 0 4px 8px -4px rgba(0, 0, 0, 0.06);
 }
 
 .dark .glass {
@@ -86,11 +112,11 @@ body {
 
 /* Extra strong glass for dropdowns and overlays */
 .glass-strong {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(48px) saturate(200%);
   -webkit-backdrop-filter: blur(48px) saturate(200%);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(24, 24, 27, 0.14);
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(24, 24, 27, 0.06);
 }
 
 .dark .glass-strong {

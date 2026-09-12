@@ -9,6 +9,9 @@ export const SITE_DESCRIPTION =
 export const SITE_TAGLINE =
     "Global market analysis for NYSE, NASDAQ, ASX, HKEX, JPX, LSE."
 
+export const COMPANY_NAME = "Vrtx Labs"
+export const COMPANY_URL = "https://www.vrtxlabs.tech"
+
 function siteUrl(): URL {
     const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim()
     try {

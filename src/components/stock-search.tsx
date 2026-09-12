@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion"
 interface StockSearchProps {
     onSearch: (query: string) => void
     isLoading?: boolean
+    autoFocus?: boolean
+    placeholder?: string
 }
 
 interface Suggestion {
@@ -17,7 +19,12 @@ interface Suggestion {
     type: string
 }
 
-export function StockSearch({ onSearch, isLoading }: StockSearchProps) {
+export function StockSearch({
+    onSearch,
+    isLoading,
+    autoFocus = true,
+    placeholder = "Search ticker (e.g. AAPL, BHP.AX)...",
+}: StockSearchProps) {
     const [query, setQuery] = React.useState("")
     const [suggestions, setSuggestions] = React.useState<Suggestion[]>([])
     const [showSuggestions, setShowSuggestions] = React.useState(false)
@@ -80,9 +87,9 @@ export function StockSearch({ onSearch, isLoading }: StockSearchProps) {
                             setShowSuggestions(true)
                         }}
                         onFocus={() => setShowSuggestions(true)}
-                        placeholder="Search ticker (e.g. AAPL, BHP.AX)..."
-                        className="w-full h-14 pl-12 pr-4 text-lg bg-background/50 backdrop-blur-md border border-border/50 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-mono group-hover:shadow-primary/5 placeholder:text-muted-foreground/50"
-                        autoFocus
+                        placeholder={placeholder}
+                        className="w-full h-14 pl-12 pr-4 text-lg bg-background/90 backdrop-blur-md border border-border rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-mono group-hover:shadow-primary/5 placeholder:text-muted-foreground/70"
+                        autoFocus={autoFocus}
                     />
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                         {isLoading ? (

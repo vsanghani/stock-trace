@@ -49,13 +49,13 @@ export default async function BlogPost({ params }: Props) {
         <article className="container mx-auto px-4 py-12 md:py-20">
             <Link
                 href="/blog"
-                className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors"
+                className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
                 <ArrowLeft size={16} />
                 Back to Blog
             </Link>
 
-            <div className="relative mb-8 aspect-video w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+            <div className="relative mb-8 aspect-video w-full overflow-hidden rounded-xl border border-border shadow-2xl">
                 <Image
                     src={post.frontmatter.coverImage}
                     alt={post.frontmatter.title}
@@ -85,7 +85,7 @@ export default async function BlogPost({ params }: Props) {
             </div>
 
             <div className="mx-auto max-w-4xl">
-                <div className="prose prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-amber-400 prose-img:rounded-xl">
+                <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-amber-700 dark:prose-a:text-amber-400 prose-img:rounded-xl">
                     <MDXRemote source={post.content} />
                 </div>
             </div>
