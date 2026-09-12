@@ -27,6 +27,7 @@ const APP_LINKS = [
 
 const PUBLIC_LINKS = [
     { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
     { href: "/blog", label: "Blog" },
 ]
 
