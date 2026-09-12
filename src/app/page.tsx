@@ -1,80 +1,266 @@
-"use client"
+import Link from "next/link"
+import { redirect } from "next/navigation"
+import { Show } from "@clerk/nextjs"
+import {
+    ArrowRight,
+    BellRing,
+    Brain,
+    CalendarDays,
+    Calculator,
+    Globe2,
+    Grid3x3,
+    Layers,
+    LineChart,
+    ShieldAlert,
+    Sparkles,
+} from "lucide-react"
+import { LandingSearch } from "@/components/landing/landing-search"
+import { SITE_NAME } from "@/lib/site"
 
-import * as React from "react"
-import { Suspense } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { StockSearch } from "@/components/stock-search"
-import { StockDashboard } from "@/components/stock-dashboard"
-import { motion, AnimatePresence } from "framer-motion"
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/site"
+const FEATURES = [
+    {
+        icon: LineChart,
+        title: "Stock dashboard",
+        description:
+            "Live price, market cap, 52-week range, P/E, P/B, ROE and debt-to-equity for any listed company — plus analyst consensus, price targets and recent upgrades.",
+    },
+    {
+        icon: Brain,
+        title: "senLogic sentiment",
+        description:
+            "Recent headlines are scored by an AI model and condensed into a single sentiment reading, so you can see how the news is leaning before you dig in.",
+    },
+    {
+        icon: Calculator,
+        title: "DCF valuation",
+        description:
+            "Build a discounted cash flow model with adjustable growth and WACC assumptions, then read the over/under-valued verdict against the current price.",
+    },
+    {
+        icon: Layers,
+        title: "Options chain",
+        description:
+            "Browse calls and puts across expiries with strike and in-the-money filters, straight from live market data.",
+    },
+    {
+        icon: Grid3x3,
+        title: "Correlation heatmap",
+        description:
+            "See which of your holdings actually move together, and where you are unknowingly doubling down on the same risk.",
+    },
+    {
+        icon: ShieldAlert,
+        title: "Portfolio stress test",
+        description:
+            "Replay historical shock scenarios against your holdings and see the projected damage before the market does it for you.",
+    },
+    {
+        icon: CalendarDays,
+        title: "P&L calculator",
+        description:
+            "Log trades against a calendar view to track realised profit and loss day by day.",
+    },
+    {
+        icon: BellRing,
+        title: "Whisper alerts",
+        description:
+            "Set conditional alerts on price and other triggers, and get notified when something you care about happens.",
+    },
+]
 
-function HomeContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const ticker = searchParams.get("ticker")
-  const [loading, setLoading] = React.useState(false)
+const STEPS = [
+    {
+        title: "Search a ticker",
+        description:
+            "Type a symbol or company name in the box above. Autocomplete covers listings across six major exchanges.",
+    },
+    {
+        title: "Create your free account",
+        description:
+            "Sign up with an email address or a social login. You will land directly on the stock you searched for.",
+    },
+    {
+        title: "Research and stress test",
+        description:
+            "Read the fundamentals, check the sentiment, model a valuation, then run your holdings through the risk tools.",
+    },
+]
 
-  const handleSearch = async (query: string) => {
-    setLoading(true)
-    // Simulate API call for now
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // Update the URL query param
-    router.push(`/?ticker=${encodeURIComponent(query)}`)
-    setLoading(false)
-  }
+const MARKETS = ["NYSE", "NASDAQ", "ASX", "HKEX", "JPX", "LSE"]
 
-  return (
-    <div className="container mx-auto px-4 min-h-[calc(100vh-4rem)] flex flex-col items-center py-12 relative z-10">
-      <AnimatePresence mode="wait">
-        {!ticker ? (
-          <motion.div
-            key="landing"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col items-center justify-center flex-1 w-full max-w-2xl text-center space-y-8 mt-20"
-          >
-            <div className="space-y-4">
-              <h1 className="text-6xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
-                {SITE_NAME}
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground whitespace-nowrap">
-                {SITE_TAGLINE}
-              </p>
-            </div>
+export default async function LandingPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ ticker?: string }>
+}) {
+    // The research view used to live here as `/?ticker=`; keep those links working.
+    const { ticker } = await searchParams
+    if (ticker) {
+        redirect(`/dashboard?ticker=${encodeURIComponent(ticker)}`)
+    }
 
-            <div className="space-y-6 w-full flex flex-col items-center">
-              <StockSearch onSearch={handleSearch} isLoading={loading} />
-              {/* Removed Risk Selector */}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="dashboard"
-            className="w-full space-y-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex flex-col w-full items-center gap-4">
-              <div className="w-full max-w-xl flex flex-col gap-4">
-                <StockSearch onSearch={handleSearch} isLoading={loading} />
-                <div className="flex justify-center">
-                  {/* Removed Risk Selector */}
+    return (
+        <div className="relative z-10">
+            {/* Hero */}
+            <section className="container mx-auto px-4 pt-20 pb-24 flex flex-col items-center text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full border border-border/50 bg-background/50 backdrop-blur-md text-xs text-muted-foreground">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Equity research, sentiment and risk tools in one place
                 </div>
-              </div>
-            </div>
-            <StockDashboard ticker={ticker} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
 
-export default function Home() {
-  return (
-    <Suspense fallback={null}>
-      <HomeContent />
-    </Suspense>
-  )
+                <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
+                    {SITE_NAME}
+                </h1>
+
+                <p className="mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground">
+                    Look up any listed company and get the numbers that matter — fundamentals,
+                    analyst targets and AI-scored news sentiment — then pressure-test your
+                    portfolio with valuation, correlation and stress-testing tools.
+                </p>
+
+                <div className="mt-10 w-full max-w-xl">
+                    <LandingSearch />
+                </div>
+
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                    <Show when="signed-out">
+                        <Link
+                            href="/sign-up"
+                            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            Create a free account
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
+                        <Link
+                            href="/sign-in"
+                            className="inline-flex items-center h-11 px-6 rounded-xl border border-border/50 text-sm font-semibold hover:bg-secondary/50 transition-colors"
+                        >
+                            Sign in
+                        </Link>
+                    </Show>
+                    <Show when="signed-in">
+                        <Link
+                            href="/dashboard"
+                            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            Open your dashboard
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </Show>
+                </div>
+
+                <div className="mt-14 flex flex-col items-center gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground">
+                        <Globe2 className="w-3.5 h-3.5" />
+                        Markets covered
+                    </span>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                        {MARKETS.map((market) => (
+                            <span
+                                key={market}
+                                className="px-3 py-1 rounded-lg border border-border/50 bg-background/50 text-xs font-mono text-muted-foreground"
+                            >
+                                {market}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Features */}
+            <section className="container mx-auto px-4 py-20 border-t border-border/50">
+                <div className="max-w-2xl">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter">
+                        What you can do with {SITE_NAME}
+                    </h2>
+                    <p className="mt-4 text-muted-foreground">
+                        Every tool runs on live market data. Start with a single ticker, or load
+                        your whole portfolio and look at it as one position.
+                    </p>
+                </div>
+
+                <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {FEATURES.map((feature) => (
+                        <div
+                            key={feature.title}
+                            className="p-6 rounded-2xl border border-border/50 bg-background/40 backdrop-blur-md hover:border-border transition-colors"
+                        >
+                            <feature.icon className="w-5 h-5 text-foreground" />
+                            <h3 className="mt-4 font-semibold">{feature.title}</h3>
+                            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                                {feature.description}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* How it works */}
+            <section className="container mx-auto px-4 py-20 border-t border-border/50">
+                <div className="max-w-2xl">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter">
+                        How to get started
+                    </h2>
+                    <p className="mt-4 text-muted-foreground">
+                        Three steps, and the first one is already on this page.
+                    </p>
+                </div>
+
+                <ol className="mt-12 grid gap-6 md:grid-cols-3">
+                    {STEPS.map((step, index) => (
+                        <li
+                            key={step.title}
+                            className="p-6 rounded-2xl border border-border/50 bg-background/40 backdrop-blur-md"
+                        >
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground text-sm font-mono font-bold">
+                                {index + 1}
+                            </span>
+                            <h3 className="mt-4 font-semibold">{step.title}</h3>
+                            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                                {step.description}
+                            </p>
+                        </li>
+                    ))}
+                </ol>
+            </section>
+
+            {/* Closing CTA */}
+            <section className="container mx-auto px-4 py-20 border-t border-border/50">
+                <div className="p-10 sm:p-14 rounded-3xl border border-border/50 bg-background/40 backdrop-blur-md flex flex-col items-center text-center">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter">
+                        Start with one ticker
+                    </h2>
+                    <p className="mt-4 max-w-xl text-muted-foreground">
+                        Creating an account is free and takes about thirty seconds. Your portfolio
+                        tools stay on your device.
+                    </p>
+                    <Show
+                        when="signed-out"
+                        fallback={
+                            <Link
+                                href="/dashboard"
+                                className="mt-8 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                            >
+                                Open your dashboard
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        }
+                    >
+                        <Link
+                            href="/sign-up"
+                            className="mt-8 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            Create a free account
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </Show>
+                    <p className="mt-10 max-w-xl text-xs text-muted-foreground">
+                        {SITE_NAME} is a research tool, not financial advice. Market data is
+                        provided as-is and may be delayed or incomplete. Always do your own
+                        research before making an investment decision.
+                    </p>
+                </div>
+            </section>
+        </div>
+    )
 }
