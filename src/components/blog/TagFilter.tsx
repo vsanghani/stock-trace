@@ -1,7 +1,6 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
 
 type TagFilterProps = {
     tags: string[];
@@ -21,8 +20,8 @@ export default function TagFilter({ tags, selectedTags, onToggleTag }: TagFilter
                         className={cn(
                             "rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wider transition-colors",
                             isSelected
-                                ? "border-amber-400/50 bg-amber-400/10 text-amber-400"
-                                : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-white"
+                                ? "border-amber-600/40 bg-amber-500/10 text-amber-800 dark:border-amber-400/50 dark:text-amber-400"
+                                : "border-border bg-secondary/60 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                         )}
                     >
                         {tag}

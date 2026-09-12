@@ -4,7 +4,7 @@ const VRTX_LABS_URL = "https://www.vrtxlabs.tech"
 
 export function Footer() {
     return (
-        <footer className="relative z-10 mt-auto border-t border-border/50 bg-background/60 backdrop-blur-md">
+        <footer className="relative z-10 mt-auto border-t border-border bg-background/80 backdrop-blur-md">
             <p className="container mx-auto px-6 py-6 text-center text-sm text-muted-foreground">
                 Built by{" "}
                 <Link

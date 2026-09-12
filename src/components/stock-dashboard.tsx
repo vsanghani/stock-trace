@@ -225,7 +225,7 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                         <div className="glass rounded-xl overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="text-xs uppercase bg-white/5 text-muted-foreground border-b border-white/10">
+                                    <thead className="text-xs uppercase bg-muted/70 text-muted-foreground border-b border-border">
                                         <tr>
                                             <th className="px-6 py-4">Date</th>
                                             <th className="px-6 py-4">Firm</th>
@@ -233,10 +233,10 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                                             <th className="px-6 py-4">Rating</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-white/5">
+                                    <tbody className="divide-y divide-border">
                                         {data.analystActions && data.analystActions.length > 0 ? (
                                             data.analystActions.map((action, i) => (
-                                                <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                <tr key={i} className="hover:bg-muted/60 transition-colors">
                                                     <td className="px-6 py-4 whitespace-nowrap opacity-80">
                                                         {new Date(action.date).toLocaleDateString()}
                                                     </td>

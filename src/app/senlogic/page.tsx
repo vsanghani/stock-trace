@@ -83,7 +83,7 @@ export default function SenLogicPage() {
 
                     <div className="glass rounded-xl overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-white/5 border-b border-border/50">
+                            <thead className="bg-muted/70 border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4 text-sm font-semibold">Score Range</th>
                                     <th className="px-6 py-4 text-sm font-semibold">Label</th>

@@ -16,7 +16,7 @@ export default function SearchInput({ value, onChange }: SearchInputProps) {
                 placeholder="Search for stocks, topics, or keywords..."
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background/50 pl-9 pr-4 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 glass"
+                className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-4 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 glass"
             />
         </div>
     );

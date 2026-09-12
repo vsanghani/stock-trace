@@ -8,14 +8,14 @@ import { useTheme } from "next-themes"
 const PALETTE = {
     light: {
         colorBackground: "#ffffff",
-        colorForeground: "#09090b",
+        colorForeground: "#18181b",
         colorPrimary: "#18181b",
         colorPrimaryForeground: "#fafafa",
         colorMuted: "#f4f4f5",
-        colorMutedForeground: "#71717a",
+        colorMutedForeground: "#3f3f46",
         colorInput: "#ffffff",
-        colorInputForeground: "#09090b",
-        colorBorder: "#e4e4e7",
+        colorInputForeground: "#18181b",
+        colorBorder: "#d4d4d8",
         colorRing: "#18181b",
     },
     dark: {
