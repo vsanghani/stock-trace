@@ -27,6 +27,7 @@ const APP_LINKS = [
 
 const PUBLIC_LINKS = [
     { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
     { href: "/blog", label: "Blog" },
 ]
 
@@ -51,7 +52,7 @@ export function Navbar() {
     const links = isSignedIn ? APP_LINKS : PUBLIC_LINKS
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/60 backdrop-blur-md border-b border-border/50 transition-all duration-300">
+        <nav className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300">
             <Link href={isSignedIn ? "/dashboard" : "/"} className="z-50">
                 <div className="font-bold text-xl tracking-tighter px-3 py-1 rounded-lg border border-transparent hover:border-border/50 transition-colors">
                     {SITE_NAME}

@@ -7,14 +7,13 @@ import {
     Brain,
     CalendarDays,
     Calculator,
-    Globe2,
     Grid3x3,
     Layers,
     LineChart,
     ShieldAlert,
-    Sparkles,
 } from "lucide-react"
 import { LandingSearch } from "@/components/landing/landing-search"
+import { MarketsCovered } from "@/components/landing/markets-covered"
 import { SITE_NAME } from "@/lib/site"
 
 const FEATURES = [
@@ -72,7 +71,7 @@ const STEPS = [
     {
         title: "Search a ticker",
         description:
-            "Type a symbol or company name in the box above. Autocomplete covers listings across six major exchanges.",
+            "Type a symbol or company name in the box above. Autocomplete covers listings across major global exchanges.",
     },
     {
         title: "Create your free account",
@@ -85,8 +84,6 @@ const STEPS = [
             "Read the fundamentals, check the sentiment, model a valuation, then run your holdings through the risk tools.",
     },
 ]
-
-const MARKETS = ["NYSE", "NASDAQ", "ASX", "HKEX", "JPX", "LSE"]
 
 export default async function LandingPage({
     searchParams,
@@ -102,27 +99,19 @@ export default async function LandingPage({
     return (
         <div className="relative z-10">
             {/* Hero */}
-            <section className="container mx-auto px-4 pt-20 pb-24 flex flex-col items-center text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full border border-border/50 bg-background/50 backdrop-blur-md text-xs text-muted-foreground">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Equity research, sentiment and risk tools in one place
-                </div>
-
-                <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/50">
+            <section className="container mx-auto px-4 pt-28 pb-24 flex flex-col items-center text-center">
+                <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tighter text-foreground">
                     {SITE_NAME}
                 </h1>
-
-                <p className="mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground">
-                    Look up any listed company and get the numbers that matter — fundamentals,
-                    analyst targets and AI-scored news sentiment — then pressure-test your
-                    portfolio with valuation, correlation and stress-testing tools.
+                <p className="mt-3 max-w-md text-base sm:text-lg text-muted-foreground leading-snug">
+                    Equity research, sentiment and risk tools in one place
                 </p>
 
-                <div className="mt-10 w-full max-w-xl">
+                <div className="mt-12 w-full max-w-xl">
                     <LandingSearch />
                 </div>
 
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                     <Show when="signed-out">
                         <Link
                             href="/sign-up"
@@ -133,7 +122,7 @@ export default async function LandingPage({
                         </Link>
                         <Link
                             href="/sign-in"
-                            className="inline-flex items-center h-11 px-6 rounded-xl border border-border/50 text-sm font-semibold hover:bg-secondary/50 transition-colors"
+                            className="inline-flex items-center h-11 px-6 rounded-xl border border-border text-sm font-semibold hover:bg-secondary/50 transition-colors"
                         >
                             Sign in
                         </Link>
@@ -149,26 +138,13 @@ export default async function LandingPage({
                     </Show>
                 </div>
 
-                <div className="mt-14 flex flex-col items-center gap-3">
-                    <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground">
-                        <Globe2 className="w-3.5 h-3.5" />
-                        Markets covered
-                    </span>
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                        {MARKETS.map((market) => (
-                            <span
-                                key={market}
-                                className="px-3 py-1 rounded-lg border border-border/50 bg-background/50 text-xs font-mono text-muted-foreground"
-                            >
-                                {market}
-                            </span>
-                        ))}
-                    </div>
+                <div className="mt-16">
+                    <MarketsCovered />
                 </div>
             </section>
 
             {/* Features */}
-            <section className="container mx-auto px-4 py-20 border-t border-border/50">
+            <section className="container mx-auto px-4 py-20 border-t border-border">
                 <div className="max-w-2xl">
                     <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter">
                         What you can do with {SITE_NAME}
@@ -183,7 +159,7 @@ export default async function LandingPage({
                     {FEATURES.map((feature) => (
                         <div
                             key={feature.title}
-                            className="p-6 rounded-2xl border border-border/50 bg-background/40 backdrop-blur-md hover:border-border transition-colors"
+                            className="p-6 rounded-2xl border border-border bg-background/70 backdrop-blur-md hover:border-foreground/20 transition-colors"
                         >
                             <feature.icon className="w-5 h-5 text-foreground" />
                             <h3 className="mt-4 font-semibold">{feature.title}</h3>
@@ -196,7 +172,7 @@ export default async function LandingPage({
             </section>
 
             {/* How it works */}
-            <section className="container mx-auto px-4 py-20 border-t border-border/50">
+            <section className="container mx-auto px-4 py-20 border-t border-border">
                 <div className="max-w-2xl">
                     <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter">
                         How to get started
@@ -210,7 +186,7 @@ export default async function LandingPage({
                     {STEPS.map((step, index) => (
                         <li
                             key={step.title}
-                            className="p-6 rounded-2xl border border-border/50 bg-background/40 backdrop-blur-md"
+                            className="p-6 rounded-2xl border border-border bg-background/70 backdrop-blur-md"
                         >
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground text-sm font-mono font-bold">
                                 {index + 1}
@@ -225,8 +201,8 @@ export default async function LandingPage({
             </section>
 
             {/* Closing CTA */}
-            <section className="container mx-auto px-4 py-20 border-t border-border/50">
-                <div className="p-10 sm:p-14 rounded-3xl border border-border/50 bg-background/40 backdrop-blur-md flex flex-col items-center text-center">
+            <section className="container mx-auto px-4 py-20 border-t border-border">
+                <div className="p-10 sm:p-14 rounded-3xl border border-border bg-background/70 backdrop-blur-md flex flex-col items-center text-center">
                     <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter">
                         Start with one ticker
                     </h2>

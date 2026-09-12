@@ -88,7 +88,7 @@ export function StockSearch({
                         }}
                         onFocus={() => setShowSuggestions(true)}
                         placeholder={placeholder}
-                        className="w-full h-14 pl-12 pr-4 text-lg bg-background/50 backdrop-blur-md border border-border/50 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-mono group-hover:shadow-primary/5 placeholder:text-muted-foreground/50"
+                        className="w-full h-14 pl-12 pr-4 text-lg bg-background/90 backdrop-blur-md border border-border rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-mono group-hover:shadow-primary/5 placeholder:text-muted-foreground/70"
                         autoFocus={autoFocus}
                     />
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
