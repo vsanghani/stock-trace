@@ -12,7 +12,7 @@ export const SITE_TAGLINE =
 export const COMPANY_NAME = "Vrtx Labs"
 export const COMPANY_URL = "https://www.vrtxlabs.tech"
 
-function siteUrl(): URL {
+export function siteUrl(): URL {
     const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim()
     try {
         return new URL(raw || "http://localhost:3000")

@@ -9,19 +9,23 @@ export type Post = {
     frontmatter: {
         title: string;
         date: string;
+        updated?: string;
         excerpt: string;
         coverImage: string;
         tags: string[];
-        [key: string]: any;
+        category?: string;
+        keywords?: string[];
+        [key: string]: unknown;
     };
     content: string;
+    readingTime: number;
 };
 
 export function getPostSlugs() {
     if (!fs.existsSync(postsDirectory)) {
         return [];
     }
-    return fs.readdirSync(postsDirectory);
+    return fs.readdirSync(postsDirectory).filter((file) => file.endsWith('.mdx'));
 }
 
 export function getPostBySlug(slug: string): Post {
@@ -46,6 +50,7 @@ export function getPostBySlug(slug: string): Post {
         slug: realSlug,
         frontmatter: data as Post['frontmatter'],
         content,
+        readingTime: Math.max(1, Math.ceil(content.trim().split(/\s+/).length / 225)),
     };
 }
 
