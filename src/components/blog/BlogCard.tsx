@@ -22,18 +22,19 @@ export default function BlogCard({ post }: BlogCardProps) {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{format(new Date(post.frontmatter.date), 'MMMM d, yyyy')}</span>
                     <span>•</span>
-                    <div className="flex gap-1">
-                        {post.frontmatter.tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/80">
-                                {tag}
-                            </span>
-                        ))}
-                        {post.frontmatter.tags.length > 2 && (
-                            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/80">
-                                +{post.frontmatter.tags.length - 2}
-                            </span>
-                        )}
-                    </div>
+                    <span>{post.readingTime} min read</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1">
+                    {post.frontmatter.tags.slice(0, 2).map((tag) => (
+                        <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/80">
+                            {tag}
+                        </span>
+                    ))}
+                    {post.frontmatter.tags.length > 2 && (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/80">
+                            +{post.frontmatter.tags.length - 2}
+                        </span>
+                    )}
                 </div>
                 <h3 className="mt-2 text-xl font-bold tracking-tight text-foreground group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                     {post.frontmatter.title}
