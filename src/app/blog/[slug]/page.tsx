@@ -5,6 +5,7 @@ import { getAllPosts, getPostBySlug, getPostSlugs } from "@/lib/blog"
 import { MDXRemote } from "next-mdx-remote/rsc"
 import { format } from "date-fns"
 import { ArrowLeft, Clock } from "lucide-react"
+import { getPrimaryTopicForPost } from "@/lib/blog-topics"
 import { SITE_NAME, siteUrl } from "@/lib/site"
 
 export async function generateStaticParams() {
@@ -65,25 +66,61 @@ export default async function BlogPost({ params }: Props) {
             candidate.frontmatter.tags.some((tag) => post.frontmatter.tags.includes(tag))
         )
         .slice(0, 3)
+    const topic = getPrimaryTopicForPost(post)
     const publishedDate = new Date(`${post.frontmatter.date}T12:00:00`)
     const articleUrl = new URL(`/blog/${post.slug}`, siteUrl()).toString()
+    const blogUrl = new URL("/blog", siteUrl()).toString()
+    const topicUrl = topic
+        ? new URL(`/blog/topics/${topic.slug}`, siteUrl()).toString()
+        : undefined
+    const breadcrumbItems = [
+        {
+            "@type": "ListItem",
+            position: 1,
+            name: "Blog",
+            item: blogUrl,
+        },
+        ...(topic && topicUrl
+            ? [{
+                "@type": "ListItem",
+                position: 2,
+                name: topic.title,
+                item: topicUrl,
+            }]
+            : []),
+        {
+            "@type": "ListItem",
+            position: topic ? 3 : 2,
+            name: post.frontmatter.title,
+            item: articleUrl,
+        },
+    ]
     const structuredData = {
         "@context": "https://schema.org",
-        "@type": "Article",
-        headline: post.frontmatter.title,
-        description: post.frontmatter.excerpt,
-        image: post.frontmatter.coverImage,
-        datePublished: post.frontmatter.date,
-        dateModified: post.frontmatter.updated ?? post.frontmatter.date,
-        author: {
-            "@type": "Organization",
-            name: SITE_NAME,
-        },
-        publisher: {
-            "@type": "Organization",
-            name: SITE_NAME,
-        },
-        mainEntityOfPage: articleUrl,
+        "@graph": [
+            {
+                "@type": "Article",
+                headline: post.frontmatter.title,
+                description: post.frontmatter.excerpt,
+                image: post.frontmatter.coverImage,
+                datePublished: post.frontmatter.date,
+                dateModified: post.frontmatter.updated ?? post.frontmatter.date,
+                author: {
+                    "@type": "Organization",
+                    name: SITE_NAME,
+                },
+                publisher: {
+                    "@type": "Organization",
+                    name: SITE_NAME,
+                },
+                mainEntityOfPage: articleUrl,
+                ...(topicUrl ? { articleSection: topic?.title } : {}),
+            },
+            {
+                "@type": "BreadcrumbList",
+                itemListElement: breadcrumbItems,
+            },
+        ],
     }
 
     return (
@@ -95,11 +132,11 @@ export default async function BlogPost({ params }: Props) {
                 }}
             />
             <Link
-                href="/blog"
+                href={topic ? `/blog/topics/${topic.slug}` : "/blog"}
                 className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
                 <ArrowLeft size={16} />
-                Back to Blog
+                {topic ? `Back to ${topic.title}` : "Back to Blog"}
             </Link>
 
             <div className="relative mb-8 aspect-video w-full overflow-hidden rounded-xl border border-border shadow-2xl">
