@@ -1,5 +1,7 @@
 import { getAllPosts, getAllTags } from "@/lib/blog"
 import BlogList from "@/components/blog/BlogList"
+import TopicCard from "@/components/blog/TopicCard"
+import { BLOG_TOPICS, getPostsForTopic } from "@/lib/blog-topics"
 import { pageMetadata, SITE_NAME } from "@/lib/site"
 
 export const metadata = pageMetadata(
@@ -27,6 +29,30 @@ export default function BlogPage() {
                 </p>
             </div>
 
+            <section className="mb-16" aria-labelledby="browse-topics">
+                <div className="mb-6">
+                    <p className="text-sm font-medium text-muted-foreground">Structured learning paths</p>
+                    <h2 id="browse-topics" className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
+                        Browse by topic
+                    </h2>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    {BLOG_TOPICS.map((topic) => (
+                        <TopicCard
+                            key={topic.slug}
+                            topic={topic}
+                            articleCount={getPostsForTopic(topic, posts).length}
+                        />
+                    ))}
+                </div>
+            </section>
+
+            <div className="mb-6">
+                <p className="text-sm font-medium text-muted-foreground">Complete library</p>
+                <h2 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
+                    All investing guides
+                </h2>
+            </div>
             <BlogList initialPosts={posts} allTags={tags} />
         </div>
     )
