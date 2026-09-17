@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 import { getAllPosts } from "@/lib/blog"
+import { BLOG_TOPICS } from "@/lib/blog-topics"
 import { siteUrl } from "@/lib/site"
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -18,5 +19,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.8,
     }))
 
-    return [...staticPages, ...articles]
+    const topics: MetadataRoute.Sitemap = BLOG_TOPICS.map((topic) => ({
+        url: `${baseUrl}/blog/topics/${topic.slug}`,
+        changeFrequency: "weekly",
+        priority: 0.85,
+    }))
+
+    return [...staticPages, ...topics, ...articles]
 }
