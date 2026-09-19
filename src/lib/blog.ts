@@ -4,17 +4,24 @@ import matter from 'gray-matter';
 
 const postsDirectory = path.join(process.cwd(), 'src/content/posts');
 
+export type ArticleSource = {
+    title: string;
+    url: string;
+};
+
 export type Post = {
     slug: string;
     frontmatter: {
         title: string;
         date: string;
         updated?: string;
+        reviewed?: string;
         excerpt: string;
         coverImage: string;
         tags: string[];
         category?: string;
         keywords?: string[];
+        sources?: ArticleSource[];
         [key: string]: unknown;
     };
     content: string;
@@ -44,6 +51,17 @@ export function getPostBySlug(slug: string): Post {
 
     if (data.tags.length > 5) {
         throw new Error(`Post ${realSlug} cannot have more than 5 tags.`);
+    }
+
+    if (data.sources) {
+        if (!Array.isArray(data.sources)) {
+            throw new Error(`Post ${realSlug} sources must be an array.`);
+        }
+        for (const source of data.sources) {
+            if (!source?.title || !source?.url) {
+                throw new Error(`Post ${realSlug} has a source missing title or url.`);
+            }
+        }
     }
 
     return {
