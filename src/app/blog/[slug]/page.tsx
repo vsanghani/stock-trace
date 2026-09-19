@@ -1,11 +1,11 @@
 import Link from "next/link"
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import { getAllPosts, getPostBySlug, getPostSlugs } from "@/lib/blog"
+import { getPostBySlug, getPostSlugs } from "@/lib/blog"
 import { MDXRemote } from "next-mdx-remote/rsc"
 import { format } from "date-fns"
 import { ArrowLeft, Clock } from "lucide-react"
-import { getPrimaryTopicForPost } from "@/lib/blog-topics"
+import { getPrimaryTopicForPost, getRelatedPosts } from "@/lib/blog-topics"
 import { SITE_NAME, siteUrl } from "@/lib/site"
 
 export async function generateStaticParams() {
@@ -25,6 +25,10 @@ export async function generateMetadata({ params }: Props) {
     const resolvedParams = await params;
     try {
         const post = getPostBySlug(resolvedParams.slug);
+        const modifiedTime = [post.frontmatter.date, post.frontmatter.updated, post.frontmatter.reviewed]
+            .filter((value): value is string => Boolean(value))
+            .sort()
+            .at(-1)
         return {
             title: post.frontmatter.title,
             description: post.frontmatter.excerpt,
@@ -38,7 +42,7 @@ export async function generateMetadata({ params }: Props) {
                 description: post.frontmatter.excerpt,
                 url: `/blog/${post.slug}`,
                 publishedTime: post.frontmatter.date,
-                modifiedTime: post.frontmatter.updated ?? post.frontmatter.date,
+                modifiedTime,
                 images: [{ url: post.frontmatter.coverImage }],
                 tags: post.frontmatter.tags,
             },
@@ -60,14 +64,16 @@ export default async function BlogPost({ params }: Props) {
         notFound();
     }
 
-    const relatedPosts = getAllPosts()
-        .filter((candidate) =>
-            candidate.slug !== post.slug &&
-            candidate.frontmatter.tags.some((tag) => post.frontmatter.tags.includes(tag))
-        )
-        .slice(0, 3)
+    const relatedPosts = getRelatedPosts(post)
     const topic = getPrimaryTopicForPost(post)
     const publishedDate = new Date(`${post.frontmatter.date}T12:00:00`)
+    const reviewedDate = post.frontmatter.reviewed
+        ? new Date(`${post.frontmatter.reviewed}T12:00:00`)
+        : null
+    const modifiedDate = [post.frontmatter.date, post.frontmatter.updated, post.frontmatter.reviewed]
+        .filter((value): value is string => Boolean(value))
+        .sort()
+        .at(-1)
     const articleUrl = new URL(`/blog/${post.slug}`, siteUrl()).toString()
     const blogUrl = new URL("/blog", siteUrl()).toString()
     const topicUrl = topic
@@ -104,7 +110,7 @@ export default async function BlogPost({ params }: Props) {
                 description: post.frontmatter.excerpt,
                 image: post.frontmatter.coverImage,
                 datePublished: post.frontmatter.date,
-                dateModified: post.frontmatter.updated ?? post.frontmatter.date,
+                dateModified: modifiedDate ?? post.frontmatter.date,
                 author: {
                     "@type": "Organization",
                     name: SITE_NAME,
@@ -164,6 +170,12 @@ export default async function BlogPost({ params }: Props) {
                     </h1>
                     <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-300">
                         <span>{format(publishedDate, 'MMMM d, yyyy')}</span>
+                        {reviewedDate && (
+                            <>
+                                <span aria-hidden="true">•</span>
+                                <span>Reviewed {format(reviewedDate, 'MMMM d, yyyy')}</span>
+                            </>
+                        )}
                         <span aria-hidden="true">•</span>
                         <span className="inline-flex items-center gap-1.5">
                             <Clock size={14} />
@@ -181,6 +193,30 @@ export default async function BlogPost({ params }: Props) {
                 <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-amber-700 dark:prose-a:text-amber-400 prose-img:rounded-xl">
                     <MDXRemote source={post.content} />
                 </div>
+
+                {post.frontmatter.sources && post.frontmatter.sources.length > 0 && (
+                    <section className="mt-12 border-t border-border pt-8">
+                        <h2 className="text-xl font-bold tracking-tight">Sources and further reading</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Primary references for definitions, filings, and investor education. These
+                            links are not an endorsement of any security or strategy.
+                        </p>
+                        <ul className="mt-4 space-y-2">
+                            {post.frontmatter.sources.map((source) => (
+                                <li key={source.url}>
+                                    <a
+                                        href={source.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm font-medium text-amber-800 underline-offset-4 hover:underline dark:text-amber-400"
+                                    >
+                                        {source.title}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
 
                 {relatedPosts.length > 0 && (
                     <aside className="mt-16 border-t border-border pt-10">

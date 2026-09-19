@@ -39,6 +39,8 @@ export const BLOG_TOPICS: BlogTopic[] = [
             "order-types",
             "bull-market",
             "bear-market",
+            "glossary",
+            "interest-rates",
         ],
         matchCategories: ["Investing Basics", "Market Basics"],
     },
@@ -65,6 +67,8 @@ export const BLOG_TOPICS: BlogTopic[] = [
             "buybacks",
             "capital-allocation",
             "stock-analysis",
+            "financial-statements",
+            "pe-ratio",
         ],
         matchCategories: ["Fundamental Analysis", "Valuation"],
         tool: {
@@ -143,4 +147,26 @@ export function getPostsForTopic(topic: BlogTopic, posts = getAllPosts()): Post[
 
 export function getPrimaryTopicForPost(post: Post): BlogTopic | undefined {
     return BLOG_TOPICS.find((topic) => postMatchesTopic(post, topic))
+}
+
+export function getRelatedPosts(post: Post, limit = 3): Post[] {
+    const topic = getPrimaryTopicForPost(post)
+
+    return getAllPosts()
+        .filter((candidate) => candidate.slug !== post.slug)
+        .map((candidate) => {
+            const sharedTags = candidate.frontmatter.tags.filter((tag) =>
+                post.frontmatter.tags.includes(tag)
+            ).length
+            const sameTopic =
+                topic && getPrimaryTopicForPost(candidate)?.slug === topic.slug ? 2 : 0
+            return { candidate, score: sharedTags + sameTopic }
+        })
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score
+            return a.candidate.frontmatter.date > b.candidate.frontmatter.date ? -1 : 1
+        })
+        .slice(0, limit)
+        .map((entry) => entry.candidate)
 }
