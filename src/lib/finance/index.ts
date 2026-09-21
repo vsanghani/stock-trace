@@ -84,3 +84,19 @@ export {
     projectFreeCashFlows,
     validateDcfInputs,
 } from "./valuation"
+
+export {
+    FORECAST_MESSAGES,
+    NORM_INV_10,
+    NORM_INV_90,
+    buildForecastPath,
+    buildForecastTerminal,
+    clampForecastHorizon,
+    gbmMean,
+    gbmQuantile,
+    simulateForecast,
+    validateForecastAssumptions,
+    validateForecastSimulationInputs,
+    yearsFromDays,
+} from "./forecast"
+export type { ForecastSimulationResult } from "./forecast"

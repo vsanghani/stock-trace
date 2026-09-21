@@ -101,13 +101,13 @@ These match the routes implemented in this app. Change them only if you move the
 | Variable | Scope | Description |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | Client | Public base URL used for metadata, canonical URLs and the OpenRouter referer header. Defaults to `http://localhost:3000`. Set to your real domain in production. |
-| `OPENROUTER_API_KEY` | **Server — secret** | Enables AI news-sentiment scoring (senLogic) via [OpenRouter](https://openrouter.ai/keys). |
+| `OPENROUTER_API_KEY` | **Server — secret** | Enables AI news-sentiment scoring (senLogic) and forecast assumptions via [OpenRouter](https://openrouter.ai/keys). |
 | `ALPHA_VANTAGE_API_KEY` | **Server — secret** | News headlines feeding sentiment analysis. [Get a key](https://www.alphavantage.co/support/#api-key). |
 | `FMP_API_KEY` | **Server — secret** | Supplementary fundamentals for the DCF model. [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs). |
 
 Variables prefixed `NEXT_PUBLIC_` are inlined into the client bundle and are visible to anyone using
 the site. Never give a secret that prefix. Without `OPENROUTER_API_KEY` and `ALPHA_VANTAGE_API_KEY`,
-sentiment analysis falls back to sample data rather than failing.
+sentiment analysis and forecast assumptions fall back to sample data rather than failing.
 
 ---
 
