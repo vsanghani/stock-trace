@@ -6,7 +6,8 @@ import { pageMetadata, SITE_NAME } from "@/lib/site"
 
 export const metadata = pageMetadata(
     "Investing Guides & Market Education",
-    `Learn how stocks, options, valuation, and financial markets work with clear, practical guides from ${SITE_NAME}.`
+    `Learn how stocks, options, valuation, and financial markets work with clear, practical guides from ${SITE_NAME}.`,
+    "/blog",
 )
 
 export default function BlogPage() {

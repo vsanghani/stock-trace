@@ -46,9 +46,9 @@ export function Footer() {
                 <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-3">
                     {COLUMNS.map((column) => (
                         <div key={column.title}>
-                            <h2 className="text-xs font-semibold uppercase tracking-widest text-foreground">
+                            <p className="text-xs font-semibold uppercase tracking-widest text-foreground">
                                 {column.title}
-                            </h2>
+                            </p>
                             <ul className="mt-4 space-y-2.5">
                                 {column.links.map((link) => (
                                     <li key={link.href}>

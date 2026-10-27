@@ -8,12 +8,25 @@ export const metadata = landingMetadata()
  * so this page does not read search params and can be emitted as HTML at build time.
  */
 export default function LandingPage() {
+    const origin = siteUrl().origin
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        name: SITE_NAME,
-        description: LANDING_DESCRIPTION,
-        url: siteUrl().origin,
+        "@graph": [
+            {
+                "@type": "Organization",
+                "@id": `${origin}/#organization`,
+                name: SITE_NAME,
+                url: origin,
+                logo: new URL("/apple-icon.png", origin).href,
+            },
+            {
+                "@type": "WebSite",
+                name: SITE_NAME,
+                description: LANDING_DESCRIPTION,
+                url: origin,
+                publisher: { "@id": `${origin}/#organization` },
+            },
+        ],
     }
 
     return (

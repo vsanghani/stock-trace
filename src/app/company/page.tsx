@@ -4,7 +4,8 @@ import { COMPANY_NAME, COMPANY_URL, pageMetadata, SITE_NAME } from "@/lib/site"
 
 export const metadata = pageMetadata(
     "Company",
-    `${COMPANY_NAME} — the studio behind ${SITE_NAME}.`
+    `${COMPANY_NAME} — the studio behind ${SITE_NAME}.`,
+    "/company",
 )
 
 export default function CompanyPage() {
