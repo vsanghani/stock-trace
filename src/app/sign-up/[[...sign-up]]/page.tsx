@@ -1,7 +1,7 @@
 import { SignUp } from "@clerk/nextjs"
-import { pageMetadata } from "@/lib/site"
+import { privatePageMetadata } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "Create an account",
     "Create a free account to research any listed company and stress-test your portfolio."
 )

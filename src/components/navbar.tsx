@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Menu, X, ChevronDown, FlaskConical } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth, UserButton } from "@clerk/nextjs"
@@ -31,6 +32,42 @@ const PUBLIC_LINKS = [
     { href: "/blog", label: "Blog" },
 ]
 
+/** In-page links shown in the single header on the public landing page. */
+const LANDING_LINKS = [
+    { href: "#features", label: "Features" },
+    { href: "#how-it-works", label: "How it works" },
+    { href: "#preview", label: "Preview" },
+    { href: "#faq", label: "FAQ" },
+    { href: "/about", label: "About" },
+    { href: "/blog", label: "Blog" },
+]
+
+function NavItem({
+    href,
+    label,
+    className,
+    onClick,
+}: {
+    href: string
+    label: string
+    className: string
+    onClick?: () => void
+}) {
+    if (href.startsWith("#")) {
+        return (
+            <a href={href} className={className} onClick={onClick}>
+                {label}
+            </a>
+        )
+    }
+
+    return (
+        <Link href={href} className={className} onClick={onClick}>
+            {label}
+        </Link>
+    )
+}
+
 export function Navbar() {
     const { isSignedIn } = useAuth()
     const [isOpen, setIsOpen] = React.useState(false)
@@ -49,10 +86,13 @@ export function Navbar() {
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
-    const links = isSignedIn ? APP_LINKS : PUBLIC_LINKS
+    const pathname = usePathname()
+    const onLanding = pathname === "/" && !isSignedIn
+    const links = isSignedIn ? APP_LINKS : onLanding ? LANDING_LINKS : PUBLIC_LINKS
+    const linkClass = "text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300">
+        <nav aria-label="Primary" className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300">
             <Link href={isSignedIn ? "/dashboard" : "/"} className="z-50">
                 <div className="font-bold text-xl tracking-tighter px-3 py-1 rounded-lg border border-transparent hover:border-border/50 transition-colors">
                     {SITE_NAME}
@@ -60,22 +100,24 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3 xl:gap-4">
                 {links.map((link) => (
-                    <Link
+                    <NavItem
                         key={link.href}
                         href={link.href}
-                        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        {link.label}
-                    </Link>
+                        label={link.label}
+                        className={linkClass}
+                    />
                 ))}
 
                 {/* xperiments Dropdown */}
                 {isSignedIn && (
                     <div ref={experimentsRef} className="relative">
                         <button
+                            type="button"
                             onClick={() => setExperimentsOpen(!experimentsOpen)}
+                            aria-expanded={experimentsOpen}
+                            aria-haspopup="true"
                             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-secondary/50"
                         >
                             <FlaskConical className="w-4 h-4" />
@@ -131,10 +173,10 @@ export function Navbar() {
                             Sign in
                         </Link>
                         <Link
-                            href="/sign-up"
-                            className="h-9 px-4 inline-flex items-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                            href={onLanding ? "/dashboard" : "/sign-up"}
+                            className="h-9 px-4 inline-flex items-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"
                         >
-                            Get started
+                            {onLanding ? "Open the app" : "Get started"}
                         </Link>
                     </div>
                 )}
@@ -144,7 +186,11 @@ export function Navbar() {
             <div className="md:hidden flex items-center gap-2 z-50">
                 {isSignedIn && <UserButton />}
                 <button
+                    type="button"
                     onClick={() => setIsOpen(!isOpen)}
+                    aria-expanded={isOpen}
+                    aria-controls="mobile-menu"
+                    aria-label={isOpen ? "Close menu" : "Open menu"}
                     className="p-2 hover:bg-secondary/50 rounded-full transition-colors"
                 >
                     {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -158,25 +204,27 @@ export function Navbar() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
+                        id="mobile-menu"
                         className="fixed inset-0 top-0 left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl z-40 flex flex-col pt-24 px-6 pb-8 md:hidden overflow-y-auto"
                     >
                         <div className="flex flex-col space-y-4">
                             {links.map((link) => (
-                                <Link
+                                <NavItem
                                     key={link.href}
                                     href={link.href}
+                                    label={link.label}
                                     onClick={() => setIsOpen(false)}
                                     className="text-2xl font-bold tracking-tight hover:text-primary transition-colors"
-                                >
-                                    {link.label}
-                                </Link>
+                                />
                             ))}
 
                             {/* Mobile xperiments Section */}
                             {isSignedIn && (
                                 <div className="pt-2">
                                     <button
+                                        type="button"
                                         onClick={() => setMobileExperimentsOpen(!mobileExperimentsOpen)}
+                                        aria-expanded={mobileExperimentsOpen}
                                         className="flex items-center gap-2 text-2xl font-bold tracking-tight text-primary"
                                     >
                                         <FlaskConical className="w-6 h-6" />
@@ -217,11 +265,11 @@ export function Navbar() {
                         {!isSignedIn && (
                             <div className="mt-8 flex flex-col gap-3">
                                 <Link
-                                    href="/sign-up"
+                                    href={onLanding ? "/dashboard" : "/sign-up"}
                                     onClick={() => setIsOpen(false)}
                                     className="h-12 inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground font-semibold"
                                 >
-                                    Create a free account
+                                    {onLanding ? "Open the app" : "Create a free account"}
                                 </Link>
                                 <Link
                                     href="/sign-in"

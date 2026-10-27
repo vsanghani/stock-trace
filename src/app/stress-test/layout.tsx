@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
-import { pageMetadata } from "@/lib/site"
+import { privatePageMetadata } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "Stress Test",
     "Simulate portfolio risk scenarios against historical and hypothetical market events."
 )

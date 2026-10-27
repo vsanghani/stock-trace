@@ -183,3 +183,85 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+/* Off-screen until keyboard focus. A transform is not enough: the landing bar's
+   backdrop-filter becomes the containing block and leaves the control visible. */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0 1rem;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Sit the site header under the skip link so the bar does not cover the logo or links. */
+body:has(.skip-link:focus) nav[aria-label="Primary"] {
+  top: 2.75rem;
+}
+
+body:has(.skip-link:focus) main {
+  padding-top: calc(4rem + 2.75rem);
+}
+
+.faq-item[open] .faq-icon-closed,
+.faq-item:not([open]) .faq-icon-open {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -4,7 +4,8 @@ import { COMPANY_NAME, COMPANY_URL, pageMetadata, SITE_NAME } from "@/lib/site"
 
 export const metadata = pageMetadata(
     "Terms of use",
-    `The terms that govern use of ${SITE_NAME}.`
+    `The terms that govern use of ${SITE_NAME}.`,
+    "/terms",
 )
 
 export default function TermsPage() {

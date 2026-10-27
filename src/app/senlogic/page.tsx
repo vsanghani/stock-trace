@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { Activity, ArrowLeft, Zap, Brain, TrendingUp, Shield } from "lucide-react"
-import { pageMetadata, SITE_NAME } from "@/lib/site"
+import { privatePageMetadata, SITE_NAME } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "senLogic",
     `Learn how The Signal on ${SITE_NAME} uses AI-powered sentiment analysis to decode market emotions and provide actionable insights.`
 )

@@ -15,11 +15,12 @@ export function GridBackground() {
         const ctx = canvas.getContext("2d")
         if (!ctx) return
 
-        let animationFrameId: number
+        let animationFrameId = 0
         let mouseX = -1000
         let mouseY = -1000
+        const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
 
-        const handleResize = () => {
+        const resizeCanvas = () => {
             if (containerRef.current && canvas) {
                 canvas.width = containerRef.current.clientWidth
                 canvas.height = containerRef.current.clientHeight
@@ -27,6 +28,7 @@ export function GridBackground() {
         }
 
         const handleMouseMove = (e: MouseEvent) => {
+            if (motionQuery.matches) return
             const rect = canvas.getBoundingClientRect()
             mouseX = e.clientX - rect.left
             mouseY = e.clientY - rect.top
@@ -36,12 +38,6 @@ export function GridBackground() {
             mouseX = -1000
             mouseY = -1000
         }
-
-        window.addEventListener("resize", handleResize)
-        window.addEventListener("mousemove", handleMouseMove) // Listen on window for smoother follow
-        canvas.addEventListener("mouseleave", handleMouseLeave)
-
-        handleResize()
 
         const DOT_SPACING = 20 // Reduced spacing = more dots (2x density approx)
         const DOT_RADIUS = 1.2
@@ -97,16 +93,46 @@ export function GridBackground() {
                     ctx.fill()
                 }
             }
-
-            animationFrameId = requestAnimationFrame(render)
         }
 
-        render()
+        const handleResize = () => {
+            resizeCanvas()
+            if (motionQuery.matches) render()
+        }
+
+        window.addEventListener("resize", handleResize)
+        window.addEventListener("mousemove", handleMouseMove) // Listen on window for smoother follow
+        canvas.addEventListener("mouseleave", handleMouseLeave)
+
+        resizeCanvas()
+
+        const loop = () => {
+            render()
+            animationFrameId = requestAnimationFrame(loop)
+        }
+
+        // Keep the dot field, but don't run the cursor animation when reduced motion is requested.
+        const syncMotion = () => {
+            cancelAnimationFrame(animationFrameId)
+            if (motionQuery.matches) {
+                mouseX = -1000
+                mouseY = -1000
+                currentMouseX = -1000
+                currentMouseY = -1000
+                render()
+                return
+            }
+            loop()
+        }
+
+        syncMotion()
+        motionQuery.addEventListener("change", syncMotion)
 
         return () => {
             window.removeEventListener("resize", handleResize)
             window.removeEventListener("mousemove", handleMouseMove)
             canvas.removeEventListener("mouseleave", handleMouseLeave)
+            motionQuery.removeEventListener("change", syncMotion)
             cancelAnimationFrame(animationFrameId)
         }
     }, [theme])

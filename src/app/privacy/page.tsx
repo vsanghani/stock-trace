@@ -4,7 +4,8 @@ import { COMPANY_NAME, COMPANY_URL, pageMetadata, SITE_NAME } from "@/lib/site"
 
 export const metadata = pageMetadata(
     "Privacy policy",
-    `How ${SITE_NAME} collects, uses and stores information.`
+    `How ${SITE_NAME} collects, uses and stores information.`,
+    "/privacy",
 )
 
 export default function PrivacyPage() {
