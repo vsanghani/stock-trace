@@ -1,20 +1,13 @@
-import { redirect } from "next/navigation"
 import { HomePage } from "@/components/landing/home-page"
 import { LANDING_DESCRIPTION, landingMetadata, SITE_NAME, siteUrl } from "@/lib/site"
 
 export const metadata = landingMetadata()
 
-export default async function LandingPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ ticker?: string }>
-}) {
-    // The research view used to live here as `/?ticker=`; keep those links working.
-    const { ticker } = await searchParams
-    if (ticker) {
-        redirect(`/dashboard?ticker=${encodeURIComponent(ticker)}`)
-    }
-
+/**
+ * Statically prerendered. Legacy `/?ticker=` links are redirected in `src/proxy.ts`
+ * so this page does not read search params and can be emitted as HTML at build time.
+ */
+export default function LandingPage() {
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "WebSite",

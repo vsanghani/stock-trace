@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { siteUrl } from "@/lib/site"
+import { NON_INDEXABLE_PATHS, siteUrl } from "@/lib/site"
 
 export default function robots(): MetadataRoute.Robots {
     const baseUrl = siteUrl().origin
@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: "*",
             allow: "/",
-            disallow: ["/api/", "/dashboard/"],
+            disallow: [...NON_INDEXABLE_PATHS],
         },
         sitemap: `${baseUrl}/sitemap.xml`,
     }

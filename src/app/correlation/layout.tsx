@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
-import { pageMetadata } from "@/lib/site"
+import { privatePageMetadata } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "Correlation",
     "Visualize how portfolio holdings move together and spot hidden concentration risk."
 )

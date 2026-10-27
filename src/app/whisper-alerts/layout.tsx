@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
-import { pageMetadata } from "@/lib/site"
+import { privatePageMetadata } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "Whisper Alerts",
     "Multi-variable market alerts that filter noise and surface high-conviction conditions."
 )

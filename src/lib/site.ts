@@ -66,12 +66,37 @@ export function rootMetadata(): Metadata {
     }
 }
 
+/**
+ * Routes a crawler should not index: authenticated research tools, auth screens,
+ * and API handlers. Public marketing, blog, and legal pages are not in this list.
+ * Prefixes match the path and anything under it (`/dashboard` covers `/dashboard?ticker=`).
+ */
+export const NON_INDEXABLE_PATHS = [
+    "/api/",
+    "/dashboard",
+    "/valuation",
+    "/options",
+    "/pnl-calculator",
+    "/senlogic",
+    "/correlation",
+    "/stress-test",
+    "/whisper-alerts",
+    "/sign-in",
+    "/sign-up",
+] as const
+
+const privateRobots: Metadata["robots"] = {
+    index: false,
+    follow: false,
+}
+
 /** Metadata for the public landing page at `/`. */
 export function landingMetadata(): Metadata {
     return {
         title: { absolute: LANDING_TITLE },
         description: LANDING_DESCRIPTION,
         alternates: { canonical: "/" },
+        robots: { index: true, follow: true },
         openGraph: {
             title: LANDING_TITLE,
             description: LANDING_DESCRIPTION,
@@ -92,5 +117,13 @@ export function pageMetadata(title: string, description?: string): Metadata {
     return {
         title,
         ...(description ? { description } : {}),
+    }
+}
+
+/** Same as `pageMetadata`, plus `noindex, nofollow` for signed-in and account screens. */
+export function privatePageMetadata(title: string, description?: string): Metadata {
+    return {
+        ...pageMetadata(title, description),
+        robots: privateRobots,
     }
 }

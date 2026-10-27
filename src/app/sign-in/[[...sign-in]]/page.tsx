@@ -1,7 +1,7 @@
 import { SignIn } from "@clerk/nextjs"
-import { pageMetadata } from "@/lib/site"
+import { privatePageMetadata } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "Sign in",
     "Sign in to access live quotes, fundamentals, sentiment and portfolio risk tools."
 )

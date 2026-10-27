@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
-import { pageMetadata } from "@/lib/site"
+import { privatePageMetadata } from "@/lib/site"
 
-export const metadata = pageMetadata(
+export const metadata = privatePageMetadata(
     "Options",
     "Browse options chains, strikes, and expirations with live underlying quotes."
 )

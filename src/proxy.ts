@@ -17,10 +17,36 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/search",
+  "/robots.txt",
+  "/sitemap.xml",
 ]);
 
+/** Auth screens stay reachable, but they are not pages we want in a search index. */
+const isAuthPage = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
+
+const NOINDEX = "noindex, nofollow";
+
+function withNoindex(response: NextResponse) {
+  response.headers.set("X-Robots-Tag", NOINDEX);
+  return response;
+}
+
 export default clerkMiddleware(async (auth, request) => {
+  // The research view used to live at `/?ticker=`. Keep those links working
+  // here so the landing page itself can be statically prerendered.
+  const ticker = request.nextUrl.searchParams.get("ticker");
+  if (request.nextUrl.pathname === "/" && ticker) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    url.search = "";
+    url.searchParams.set("ticker", ticker);
+    return withNoindex(NextResponse.redirect(url));
+  }
+
   if (isPublicRoute(request)) {
+    if (isAuthPage(request)) {
+      return withNoindex(NextResponse.next());
+    }
     return;
   }
 
@@ -28,12 +54,13 @@ export default clerkMiddleware(async (auth, request) => {
   if (request.nextUrl.pathname.startsWith("/api/")) {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return withNoindex(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
-    return;
+    return withNoindex(NextResponse.next());
   }
 
   await auth.protect();
+  return withNoindex(NextResponse.next());
 });
 
 export const config = {
