@@ -38,8 +38,8 @@ export function LandingSearch() {
             />
             {!isSignedIn && (
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Lock className="w-3 h-3" />
-                    Sign in to unlock the full report — we&apos;ll take you right to it.
+                    <Lock className="w-3 h-3" aria-hidden="true" />
+                    Sign in to open this ticker in the dashboard.
                 </p>
             )}
         </div>

@@ -52,7 +52,7 @@ export function Navbar() {
     const links = isSignedIn ? APP_LINKS : PUBLIC_LINKS
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300">
+        <nav aria-label="Primary" className="fixed top-0 left-0 right-0 z-40 h-16 px-6 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300">
             <Link href={isSignedIn ? "/dashboard" : "/"} className="z-50">
                 <div className="font-bold text-xl tracking-tighter px-3 py-1 rounded-lg border border-transparent hover:border-border/50 transition-colors">
                     {SITE_NAME}
@@ -75,7 +75,10 @@ export function Navbar() {
                 {isSignedIn && (
                     <div ref={experimentsRef} className="relative">
                         <button
+                            type="button"
                             onClick={() => setExperimentsOpen(!experimentsOpen)}
+                            aria-expanded={experimentsOpen}
+                            aria-haspopup="true"
                             className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-secondary/50"
                         >
                             <FlaskConical className="w-4 h-4" />
@@ -144,7 +147,11 @@ export function Navbar() {
             <div className="md:hidden flex items-center gap-2 z-50">
                 {isSignedIn && <UserButton />}
                 <button
+                    type="button"
                     onClick={() => setIsOpen(!isOpen)}
+                    aria-expanded={isOpen}
+                    aria-controls="mobile-menu"
+                    aria-label={isOpen ? "Close menu" : "Open menu"}
                     className="p-2 hover:bg-secondary/50 rounded-full transition-colors"
                 >
                     {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -158,6 +165,7 @@ export function Navbar() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
+                        id="mobile-menu"
                         className="fixed inset-0 top-0 left-0 right-0 bottom-0 bg-background/95 backdrop-blur-xl z-40 flex flex-col pt-24 px-6 pb-8 md:hidden overflow-y-auto"
                     >
                         <div className="flex flex-col space-y-4">
@@ -176,7 +184,9 @@ export function Navbar() {
                             {isSignedIn && (
                                 <div className="pt-2">
                                     <button
+                                        type="button"
                                         onClick={() => setMobileExperimentsOpen(!mobileExperimentsOpen)}
+                                        aria-expanded={mobileExperimentsOpen}
                                         className="flex items-center gap-2 text-2xl font-bold tracking-tight text-primary"
                                     >
                                         <FlaskConical className="w-6 h-6" />

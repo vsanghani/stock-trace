@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { COMPANY_NAME, COMPANY_URL, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site"
+import { COMPANY_NAME, COMPANY_URL, SITE_DESCRIPTION, SITE_DISCLAIMER, SITE_NAME } from "@/lib/site"
 
 const COLUMNS = [
     {
@@ -64,6 +64,10 @@ export function Footer() {
                         </div>
                     ))}
                 </div>
+
+                <p className="mt-10 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+                    {SITE_DISCLAIMER}
+                </p>
             </div>
 
             <div className="border-t border-border">
@@ -80,8 +84,8 @@ export function Footer() {
                         </Link>
                         .
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                        Not financial advice.
+                    <p className="text-xs text-muted-foreground sm:text-right">
+                        Not financial advice. For information only.
                     </p>
                 </div>
             </div>

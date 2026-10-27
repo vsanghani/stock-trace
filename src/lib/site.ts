@@ -4,7 +4,24 @@ import type { Metadata } from "next"
 export const SITE_NAME = "Plutox"
 
 export const SITE_DESCRIPTION =
-    "Real-time stock research and analysis: live quotes, sentiment, options, and portfolio tools."
+    "Track listed stocks in one workspace. Latest quotes today; deeper analysis and recommendations are on the way."
+
+/** Homepage document title. Absolute so the root template does not double the brand. */
+export const LANDING_TITLE = `${SITE_NAME} — Track stocks in one workspace`
+
+export const LANDING_DESCRIPTION =
+    "Look up the latest price and company stats for a listed stock. Deeper analysis and recommendations are on the way. For information only, not financial advice."
+
+/** Shown in the footer and repeated beside the landing page's final call to action. */
+export const SITE_DISCLAIMER =
+    `${SITE_NAME} is for information only and is not financial advice. Nothing on this site is a recommendation to buy, sell or hold any security. Market data may be delayed or incomplete.`
+
+const SOCIAL_IMAGE = {
+    url: "/og.png",
+    width: 1200,
+    height: 630,
+    alt: `${LANDING_TITLE}. Latest quotes today. Deeper analysis on the way. For information only, not financial advice.`,
+} as const
 
 export const SITE_TAGLINE =
     "Global market analysis for NYSE, NASDAQ, ASX, HKEX, JPX, LSE."
@@ -38,11 +55,34 @@ export function rootMetadata(): Metadata {
             title: SITE_NAME,
             description: SITE_DESCRIPTION,
             url: url.toString(),
+            images: [SOCIAL_IMAGE],
         },
         twitter: {
             card: "summary_large_image",
             title: SITE_NAME,
             description: SITE_DESCRIPTION,
+            images: [SOCIAL_IMAGE.url],
+        },
+    }
+}
+
+/** Metadata for the public landing page at `/`. */
+export function landingMetadata(): Metadata {
+    return {
+        title: { absolute: LANDING_TITLE },
+        description: LANDING_DESCRIPTION,
+        alternates: { canonical: "/" },
+        openGraph: {
+            title: LANDING_TITLE,
+            description: LANDING_DESCRIPTION,
+            url: "/",
+            images: [SOCIAL_IMAGE],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: LANDING_TITLE,
+            description: LANDING_DESCRIPTION,
+            images: [SOCIAL_IMAGE.url],
         },
     }
 }
