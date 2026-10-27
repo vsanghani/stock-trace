@@ -8,7 +8,6 @@ import {
     type LucideIcon,
 } from "lucide-react"
 import { Faq } from "@/components/landing/faq"
-import { LandingNav } from "@/components/landing/landing-nav"
 import { LandingSearch } from "@/components/landing/landing-search"
 import { MarketsCovered } from "@/components/landing/markets-covered"
 import { ProductPreview } from "@/components/landing/product-preview"
@@ -74,9 +73,7 @@ const primaryCtaClass =
 export function HomePage() {
     return (
         <div className="relative z-10">
-            <LandingNav />
-
-            <section id="content" className="container mx-auto px-4 pt-16 pb-20 sm:pt-24 sm:pb-24 flex flex-col items-center text-center">
+            <section className="container mx-auto px-4 pt-10 pb-20 sm:pt-16 sm:pb-24 flex flex-col items-center text-center">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                     Stock tracking
                 </p>

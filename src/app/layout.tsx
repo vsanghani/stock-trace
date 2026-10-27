@@ -30,6 +30,9 @@ export default function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground transition-colors duration-300`}
             >
+                <a href="#content" className="skip-link">
+                    Skip to content
+                </a>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"
@@ -40,7 +43,7 @@ export default function RootLayout({
                         <GridBackground />
                         <div className="relative flex min-h-screen flex-col">
                             <Navbar />
-                            <main className="flex-1 pt-16 relative overflow-hidden">{children}</main>
+                            <main id="content" className="flex-1 pt-16 relative overflow-hidden">{children}</main>
                             <Footer />
                         </div>
                     </ClerkProviderThemed>

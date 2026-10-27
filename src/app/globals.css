@@ -193,22 +193,51 @@ body {
   }
 }
 
+/* Off-screen until keyboard focus. A transform is not enough: the landing bar's
+   backdrop-filter becomes the containing block and leaves the control visible. */
 .skip-link {
   position: absolute;
-  left: 1rem;
-  top: 4.75rem;
-  z-index: 50;
-  padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0 1rem;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
   background: var(--primary);
   color: var(--primary-foreground);
   font-size: 0.875rem;
   font-weight: 600;
-  transform: translateY(-200%);
 }
 
-.skip-link:focus {
-  transform: translateY(0);
+/* Sit the site header under the skip link so the bar does not cover the logo or links. */
+body:has(.skip-link:focus) nav[aria-label="Primary"] {
+  top: 2.75rem;
+}
+
+body:has(.skip-link:focus) main {
+  padding-top: calc(4rem + 2.75rem);
 }
 
 .faq-item[open] .faq-icon-closed,
