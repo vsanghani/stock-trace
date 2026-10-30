@@ -1,0 +1,45 @@
+name: Ingest Form 13F
+
+# Form 13F is due 45 days after quarter-end. The data set is published shortly
+# after that deadline. The second date each quarter is a catch-up in case the
+# ZIP is not up on day 45.
+#
+# Q4 (31 Dec) -> 14 Feb and 21 Feb
+# Q1 (31 Mar) -> 15 May and 22 May
+# Q2 (30 Jun) -> 14 Aug and 21 Aug
+# Q3 (30 Sep) -> 14 Nov and 21 Nov
+
+on:
+  schedule:
+    - cron: "0 12 14,21 2 *"
+    - cron: "0 12 15,22 5 *"
+    - cron: "0 12 14,21 8 *"
+    - cron: "0 12 14,21 11 *"
+  workflow_dispatch:
+
+concurrency:
+  group: ingest-13f-quarterly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Migrate and ingest the retained quarters
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          set -euo pipefail
+          npx tsx scripts/migrate.ts
+          npx tsx scripts/ingest.ts 13f
