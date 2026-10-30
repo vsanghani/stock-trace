@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // `pg` talks to Postgres over Node sockets and must not be bundled.
+  serverExternalPackages: ["pg"],
   images: {
     remotePatterns: [
       {

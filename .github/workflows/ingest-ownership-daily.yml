@@ -1,0 +1,47 @@
+name: Ingest Form 4 and 13D/G
+
+# SEC publishes the daily master index overnight. 11:30 UTC is morning in the US,
+# after the previous filing day's index is available. The job reads the previous
+# weekday when --date is omitted.
+
+on:
+  schedule:
+    - cron: "30 11 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Filing date YYYY-MM-DD (default: previous weekday)"
+        required: false
+        type: string
+
+concurrency:
+  group: ingest-ownership-daily
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Migrate and ingest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          INGEST_DATE: ${{ inputs.date }}
+        run: |
+          set -euo pipefail
+          npx tsx scripts/migrate.ts
+          if [ -n "${INGEST_DATE:-}" ]; then
+            npx tsx scripts/ingest.ts daily --date "${INGEST_DATE}"
+          else
+            npx tsx scripts/ingest.ts daily
+          fi
