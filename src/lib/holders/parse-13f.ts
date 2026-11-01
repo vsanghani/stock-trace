@@ -2,7 +2,7 @@ import { applyAmendments, aggregateLongEquity, type AmendmentLine } from "@/lib/
 import { isListedCusip } from "@/lib/holders/cusip-list"
 import { padCik, parseEdgarDate } from "@/lib/holders/dates"
 import { column, parseTsv } from "@/lib/holders/tsv"
-import { normalize13fValue, type ValueUnit } from "@/lib/holders/value"
+import { normalize13fValue, reconcileImpliedPrices, type ValueUnit } from "@/lib/holders/value"
 
 export interface CleanFiling {
     accessionNumber: string
@@ -173,6 +173,14 @@ export function clean13fDataset(input: {
         const list = linesByAccession.get(accession) ?? []
         list.push(line)
         linesByAccession.set(accession, list)
+    }
+
+    const reconciled = reconcileImpliedPrices([...linesByAccession.values()].flat())
+    linesByAccession.clear()
+    for (const line of reconciled) {
+        const list = linesByAccession.get(line.accessionNumber) ?? []
+        list.push(line)
+        linesByAccession.set(line.accessionNumber, list)
     }
 
     const groups = new Map<string, CleanFiling[]>()

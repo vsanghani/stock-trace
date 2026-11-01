@@ -31,7 +31,7 @@ import { parseOwnershipXml } from "@/lib/holders/parse-ownership"
 import { closePool, getPool, requireSecUserAgent } from "@/lib/holders/pool"
 import { defaultLimiter, secDownload, secText, secTextIfExists } from "@/lib/holders/sec-http"
 import { column, forEachTsvRow, parseTsv } from "@/lib/holders/tsv"
-import { normalize13fValue } from "@/lib/holders/value"
+import { normalize13fValue, reconcileImpliedPrices } from "@/lib/holders/value"
 import { extractEmbeddedXml } from "@/lib/holders/xml"
 import { openZipEntryStream, readZipText } from "@/lib/holders/zip"
 
@@ -529,7 +529,76 @@ export async function ingest13f(log: Log = silent): Promise<void> {
         }
     }
 
+    await reconcileStoredHoldings(pool, log)
     await recomputeSuperseded(pool, [...touched.values()], log)
+}
+
+async function reconcileStoredHoldings(pool: pg.Pool, log: Log): Promise<void> {
+    const cusips = await pool.query<{ cusip: string }>("SELECT DISTINCT cusip FROM holding_13f")
+    let corrected = 0
+    let flagged = 0
+    for (const { cusip } of cusips.rows) {
+        const loaded = await pool.query<{
+            id: string
+            report_period: string
+            filer_id: string
+            value_usd: string
+            shares: string
+            value_unit: "dollars" | "thousands"
+            put_call: string | null
+            share_type: string | null
+            value_unit_flagged: boolean
+        }>(
+            `SELECT id::text, report_period::text, filer_id::text, value_usd::text, shares::text,
+                    value_unit, put_call, share_type, value_unit_flagged
+             FROM holding_13f
+             WHERE cusip = $1
+               AND shares > 0
+               AND COALESCE(put_call, '') = ''
+               AND COALESCE(NULLIF(share_type, ''), 'SH') = 'SH'`,
+            [cusip],
+        )
+        if (loaded.rows.length === 0) continue
+        const originals = new Map(loaded.rows.map((row) => [row.id, row]))
+        const reconciled = reconcileImpliedPrices(
+            loaded.rows.map((row) => ({
+                id: row.id,
+                cusip,
+                reportPeriod: row.report_period,
+                filerCik: row.filer_id,
+                valueUsd: Number(row.value_usd),
+                shares: Number(row.shares),
+                valueUnit: row.value_unit,
+                putCall: row.put_call,
+                shareType: row.share_type,
+            })),
+        )
+        const changed = reconciled.filter((line) => {
+            const original = originals.get(line.id)
+            if (!original) return false
+            const valueChanged = Math.abs(line.valueUsd - Number(original.value_usd)) > 0.0001
+            return valueChanged || line.valueUnit !== original.value_unit || line.unitFlagged !== original.value_unit_flagged
+        })
+        for (const batch of chunk(changed, 200)) {
+            await pool.query(
+                `UPDATE holding_13f AS h
+                 SET value_usd = v.value_usd,
+                     value_unit = v.value_unit,
+                     value_unit_flagged = v.flagged
+                 FROM UNNEST($1::bigint[], $2::numeric[], $3::text[], $4::boolean[]) AS v(id, value_usd, value_unit, flagged)
+                 WHERE h.id = v.id`,
+                [
+                    batch.map((line) => line.id),
+                    batch.map((line) => line.valueUsd),
+                    batch.map((line) => line.valueUnit),
+                    batch.map((line) => line.unitFlagged),
+                ],
+            )
+        }
+        corrected += changed.filter((line) => line.unitCorrected).length
+        flagged += changed.filter((line) => line.unitFlagged).length
+    }
+    log(`Implied-price check: rescaled ${corrected} lines, flagged ${flagged}`)
 }
 
 async function findSecurity(pool: pg.Pool, match: { ticker?: string | null; cik?: string | null; cusip?: string | null }): Promise<SecurityRow | null> {

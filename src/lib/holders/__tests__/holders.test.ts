@@ -21,7 +21,7 @@ import { currentInsiderPosition, parseForm4Xml } from "@/lib/holders/parse-form4
 import { parseOwnershipXml } from "@/lib/holders/parse-ownership"
 import { exceedsFairAccess, requestStartTimes, SEC_MAX_REQUESTS_PER_SECOND } from "@/lib/holders/rate-limit"
 import { emptyHolders, resolveHolders, selectMajorHolders, type HolderPosition } from "@/lib/holders/resolve"
-import { normalize13fValue } from "@/lib/holders/value"
+import { MIN_FILERS_FOR_PRICE_MEDIAN, normalize13fValue, reconcileImpliedPrices, type PriceCheckLine } from "@/lib/holders/value"
 import { extractEmbeddedXml } from "@/lib/holders/xml"
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), "..", "__fixtures__")
@@ -44,29 +44,64 @@ describe("13F value units", () => {
         expect(normalize13fValue(8_000_000_000, "2024-08-14")).toMatchObject({ unit: "dollars", valueUsd: 8_000_000_000 })
     })
 
-    it("corrects a value whose implied price is about 1000x outside a share-price band", () => {
-        const stillThousands = normalize13fValue(180, "2024-08-14", 1_000)
-        expect(stillThousands).toMatchObject({
-            valueUsd: 180_000,
-            impliedPrice: 180,
+    it("does not rescale from an absolute price band", () => {
+        const cheap = normalize13fValue(400, "2024-08-14", 1_000)
+        expect(cheap).toMatchObject({ valueUsd: 400, impliedPrice: 0.4, unitCorrected: false, unitFlagged: false })
+    })
+})
+
+function priceLine(filerCik: string, valueUsd: number, shares: number, cusip = "000000001"): PriceCheckLine {
+    return {
+        cusip,
+        reportPeriod: "2024-06-30",
+        filerCik,
+        valueUsd,
+        shares,
+        valueUnit: "dollars",
+        putCall: null,
+        shareType: "SH",
+    }
+}
+
+describe("implied price against the filer median", () => {
+    it("keeps a correctly reported sub-$1 stock", () => {
+        const lines = Array.from({ length: MIN_FILERS_FOR_PRICE_MEDIAN }, (_, index) =>
+            priceLine(`filer-${index}`, 400, 1_000),
+        )
+        const reconciled = reconcileImpliedPrices(lines)
+        expect(reconciled.every((line) => line.impliedPrice === 0.4)).toBe(true)
+        expect(reconciled.every((line) => line.valueUsd === 400)).toBe(true)
+        expect(reconciled.every((line) => !line.unitCorrected && !line.unitFlagged)).toBe(true)
+    })
+
+    it("rescales a line about 1000x off the median when enough filers agree", () => {
+        const peers = Array.from({ length: MIN_FILERS_FOR_PRICE_MEDIAN - 1 }, (_, index) =>
+            priceLine(`peer-${index}`, 400, 1_000),
+        )
+        const outlier = priceLine("outlier", 400_000, 1_000)
+        const reconciled = reconcileImpliedPrices([...peers, outlier])
+        const fixed = reconciled.find((line) => line.filerCik === "outlier")
+        expect(fixed).toMatchObject({
+            valueUsd: 400,
+            impliedPrice: 0.4,
+            valueUnit: "dollars",
             unitCorrected: true,
             unitFlagged: false,
         })
+        expect(reconciled.filter((line) => line.filerCik !== "outlier").every((line) => !line.unitCorrected)).toBe(true)
+    })
 
-        const scaledTwice = normalize13fValue(2_000_000, "2022-11-14", 1_000)
-        expect(scaledTwice).toMatchObject({
-            valueUsd: 2_000_000,
-            impliedPrice: 2_000,
-            unitCorrected: true,
-            unitFlagged: false,
+    it("flags a single-filer CUSIP and does not rescale it", () => {
+        const [cheap] = reconcileImpliedPrices([priceLine("only", 400, 1_000, "111111111")])
+        expect(cheap).toMatchObject({ valueUsd: 400, impliedPrice: 0.4, unitCorrected: false, unitFlagged: true })
+
+        const [expensive] = reconcileImpliedPrices([priceLine("only", 2_000_000_000, 1_000, "222222222")])
+        expect(expensive).toMatchObject({
+            valueUsd: 2_000_000_000,
+            impliedPrice: 2_000_000,
+            unitCorrected: false,
+            unitFlagged: true,
         })
-
-        const ordinary = normalize13fValue(150_000, "2022-11-14", 1_000_000)
-        expect(ordinary).toMatchObject({ valueUsd: 150_000_000, impliedPrice: 150, unitCorrected: false, unitFlagged: false })
-
-        const unexplained = normalize13fValue(1, "2024-08-14", 1_000_000)
-        expect(unexplained.unitCorrected).toBe(false)
-        expect(unexplained.unitFlagged).toBe(true)
     })
 })
 
