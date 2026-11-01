@@ -19,7 +19,7 @@ export interface HolderPosition {
 export const MAJOR_HOLDER_LIMIT = 25
 
 export const HOLDERS_DELAY_NOTE =
-    "13F data is quarterly and delayed by up to 45 days. It covers long US-listed positions only."
+    "13F data is quarterly and delayed by up to 45 days. It covers long US-listed positions only. 5% holders whose last Schedule 13D or 13G predates XML filing in December 2024 may be missing. Related filers, such as a parent and a subsidiary, can appear separately."
 
 function comparePosition(a: HolderPosition, b: HolderPosition): number {
     if (a.asOf !== b.asOf) return a.asOf < b.asOf ? -1 : 1
@@ -37,6 +37,7 @@ function shareCount(position: HolderPosition): number {
  * A 13D, 13G, or Form 4 position replaces a 13F position for the same CIK
  * when its as-of date is on or after the 13F report period. The later
  * override wins. A newer 13F is kept when the 13D/G or Form 4 is older.
+ * A winning position that reports zero shares removes the holder.
  */
 export function resolveHolders(positions: HolderPosition[]): HolderPosition[] {
     const grouped = new Map<string, HolderPosition[]>()
@@ -63,11 +64,15 @@ export function resolveHolders(positions: HolderPosition[]): HolderPosition[] {
             .filter((position): position is HolderPosition => position != null)
             .filter((position) => !from13f || position.asOf >= from13f.asOf)
 
+        let chosen: HolderPosition | undefined
         if (overrides.length > 0) {
             overrides.sort(comparePosition)
-            winners.push(overrides[overrides.length - 1])
+            chosen = overrides[overrides.length - 1]
         } else if (from13f) {
-            winners.push(from13f)
+            chosen = from13f
+        }
+        if (chosen && !(chosen.shares != null && chosen.shares <= 0)) {
+            winners.push(chosen)
         }
     }
 

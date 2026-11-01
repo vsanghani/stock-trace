@@ -8,6 +8,9 @@ export interface AmendmentLine {
     investmentDiscretion: string | null
     otherManager: string | null
     infotableSk: number
+    shares?: number
+    valueUsd?: number
+    valueRaw?: number
     superseded?: boolean
 }
 
@@ -53,13 +56,34 @@ export function compareFilingOrder(a: { filedAt: string; accessionNumber: string
     return 0
 }
 
-/** Collapse exact duplicate lines in one filing. The highest INFOTABLE_SK wins. */
+function sumDefined(left: number | undefined, right: number | undefined): number | undefined {
+    if (left == null && right == null) return undefined
+    return (left ?? 0) + (right ?? 0)
+}
+
+/**
+ * Combine lines in one filing that share CUSIP, put/call, investment discretion,
+ * and other-manager. SEC 13F data sets do not contain true duplicates
+ * (INFOTABLE_SK is unique), so those rows are separate lots and their shares
+ * and values are summed. The higher INFOTABLE_SK supplies the other fields.
+ */
 export function dedupeLines<T extends AmendmentLine>(lines: T[]): T[] {
     const byKey = new Map<string, T>()
     for (const line of lines) {
         const key = lineKey(line)
-        const prev = byKey.get(key)
-        if (!prev || line.infotableSk >= prev.infotableSk) byKey.set(key, line)
+        const previous = byKey.get(key)
+        if (!previous) {
+            byKey.set(key, line)
+            continue
+        }
+        const primary = line.infotableSk >= previous.infotableSk ? line : previous
+        const secondary = primary === line ? previous : line
+        byKey.set(key, {
+            ...primary,
+            shares: sumDefined(primary.shares, secondary.shares),
+            valueUsd: sumDefined(primary.valueUsd, secondary.valueUsd),
+            valueRaw: sumDefined(primary.valueRaw, secondary.valueRaw),
+        })
     }
     return [...byKey.values()]
 }
@@ -68,7 +92,7 @@ export function dedupeLines<T extends AmendmentLine>(lines: T[]): T[] {
  * Apply 13F amendments in filing order.
  *
  * A restatement replaces the book for that filer and report period.
- * New holdings are added. A repeated position key is replaced by the later line.
+ * New holdings are added. A later filing replaces an active line with the same key.
  * 13F-NT notices are ignored. Amendments with no type are treated as restatements.
  * Superseded lines are kept on the result so callers can persist the flag.
  */

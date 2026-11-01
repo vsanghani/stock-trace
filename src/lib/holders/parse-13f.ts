@@ -146,7 +146,7 @@ export function clean13fDataset(input: {
         const shares = parseNumber(column(row, "SSHPRNAMT"))
         const rawValue = parseNumber(column(row, "VALUE"))
         if (shares == null || rawValue == null) continue
-        const normalized = normalize13fValue(rawValue, filing.filedAt)
+        const normalized = normalize13fValue(rawValue, filing.filedAt, shares)
         const figi = column(row, "FIGI")
         const line: ParsedLine = {
             accessionNumber: accession,

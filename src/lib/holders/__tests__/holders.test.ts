@@ -43,6 +43,31 @@ describe("13F value units", () => {
         expect(normalize13fValue(150000, "2023-01-03")).toMatchObject({ unit: "dollars", valueUsd: 150_000 })
         expect(normalize13fValue(8_000_000_000, "2024-08-14")).toMatchObject({ unit: "dollars", valueUsd: 8_000_000_000 })
     })
+
+    it("corrects a value whose implied price is about 1000x outside a share-price band", () => {
+        const stillThousands = normalize13fValue(180, "2024-08-14", 1_000)
+        expect(stillThousands).toMatchObject({
+            valueUsd: 180_000,
+            impliedPrice: 180,
+            unitCorrected: true,
+            unitFlagged: false,
+        })
+
+        const scaledTwice = normalize13fValue(2_000_000, "2022-11-14", 1_000)
+        expect(scaledTwice).toMatchObject({
+            valueUsd: 2_000_000,
+            impliedPrice: 2_000,
+            unitCorrected: true,
+            unitFlagged: false,
+        })
+
+        const ordinary = normalize13fValue(150_000, "2022-11-14", 1_000_000)
+        expect(ordinary).toMatchObject({ valueUsd: 150_000_000, impliedPrice: 150, unitCorrected: false, unitFlagged: false })
+
+        const unexplained = normalize13fValue(1, "2024-08-14", 1_000_000)
+        expect(unexplained.unitCorrected).toBe(false)
+        expect(unexplained.unitFlagged).toBe(true)
+    })
 })
 
 describe("13F amendments", () => {
@@ -53,12 +78,34 @@ describe("13F amendments", () => {
         expect(classifyAmendment({ submissionType: "13F-NT", isAmendment: false, amendmentType: null })).toBe("NOTICE")
     })
 
-    it("keeps the highest info-table key when a filing repeats a position", () => {
+    it("sums shares and value when one filing repeats a CUSIP and discretion", () => {
         const [kept] = dedupeLines([
-            { accessionNumber: "a", cusip: "594918104", putCall: null, investmentDiscretion: "SOLE", otherManager: null, infotableSk: 1 },
-            { accessionNumber: "a", cusip: "594918104", putCall: null, investmentDiscretion: "SOLE", otherManager: null, infotableSk: 2 },
+            {
+                accessionNumber: "a",
+                cusip: "594918104",
+                putCall: null,
+                investmentDiscretion: "SOLE",
+                otherManager: null,
+                infotableSk: 1,
+                shares: 15_000_000,
+                valueUsd: 4_000_000_000,
+            },
+            {
+                accessionNumber: "a",
+                cusip: "594918104",
+                putCall: null,
+                investmentDiscretion: "SOLE",
+                otherManager: null,
+                infotableSk: 2,
+                shares: 15_000_001,
+                valueUsd: 4_000_001_000,
+            },
         ])
-        expect(kept.infotableSk).toBe(2)
+        expect(kept).toMatchObject({
+            infotableSk: 2,
+            shares: 30_000_001,
+            valueUsd: 8_000_001_000,
+        })
     })
 
     it("applies a restatement after new holdings and drops the replaced book", () => {
@@ -131,11 +178,11 @@ describe("AAPL, MSFT, and NVDA 13F fixtures", () => {
         })
     })
 
-    it("dedupes BlackRock's MSFT lines, sums discretion, and leaves the dollar value unscaled", () => {
+    it("sums BlackRock MSFT lots that share a discretion and leaves dollar values unscaled", () => {
         const rows = cleaned.holdings.filter((row) => row.filerCik === "0001364742" && !row.superseded)
         const longs = aggregateLongEquity(rows)
         expect(longs).toEqual([
-            { cusip: "594918104", shares: 20_000_001, valueUsd: 5_000_001_000 },
+            { cusip: "594918104", shares: 35_000_001, valueUsd: 9_000_001_000 },
             { cusip: "67066G104", shares: 5_000_000, valueUsd: 8_000_000_000 },
         ])
         expect(rows.some((row) => row.putCall === "PUT")).toBe(true)
@@ -265,6 +312,17 @@ describe("holder overrides", () => {
         expect(msft.find((row) => row.holderCik === "0001364742")).toMatchObject({ source: "13F", shares: 20_000_001 })
     })
 
+    it("removes a holder when a later 13G or Form 4 reports zero shares", () => {
+        const resolved = resolveHolders([
+            filing("13F", "0000999991", "NORTHSTAR CAPITAL LLC", 1_000, "2024-06-30", "2024-08-14"),
+            { ...filing("13G", "0000999991", "NORTHSTAR CAPITAL LLC", 0, "2025-02-14", "2025-02-18"), formType: "SCHEDULE 13G/A" },
+            filing("13F", "0001214156", "COOK TIMOTHY D", 4_000_000, "2024-06-30", "2024-08-14"),
+            filing("4", "0001214156", "COOK TIMOTHY D", 0, "2024-11-01", "2024-11-03"),
+            filing("13F", "0000102909", "VANGUARD GROUP INC", 1_100_000, "2024-06-30", "2024-08-14"),
+        ])
+        expect(resolved.map((row) => row.holderName)).toEqual(["VANGUARD GROUP INC"])
+    })
+
     it("keeps a 5% filing even when it is outside the largest 25 positions", () => {
         const institutions = Array.from({ length: 30 }, (_, index) =>
             filing("13F", String(1000 + index), `Fund ${index}`, 1_000_000 - index, "2024-06-30", "2024-08-14"),
@@ -350,6 +408,8 @@ CIK|Company Name|Form Type|Date Filed|File Name
             note: expect.stringContaining("45 days"),
         })
         expect(emptyHolders("AAPL").note).toContain("long US-listed")
+        expect(emptyHolders("AAPL").note).toContain("December 2024")
+        expect(emptyHolders("AAPL").note).toContain("parent and a subsidiary")
     })
 })
 

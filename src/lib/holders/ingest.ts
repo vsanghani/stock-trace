@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type pg from "pg"
-import { applyAmendments, type AmendmentFiling, type AmendmentLine } from "@/lib/holders/amendments"
+import { applyAmendments, dedupeLines, type AmendmentFiling, type AmendmentLine } from "@/lib/holders/amendments"
 import { linkCusips, listedCusips, parse13fList, isListedCusip } from "@/lib/holders/cusip-list"
 import { earliestRetainedPeriod, padCik, parseEdgarDate, previousBusinessDay, todayIso } from "@/lib/holders/dates"
 import {
@@ -253,25 +253,17 @@ interface HoldingInsert {
     reportPeriod: string
 }
 
-function holdingKey(row: HoldingInsert): string {
-    return [
-        row.filingId,
-        row.cusip,
-        row.putCall ?? "",
-        (row.investmentDiscretion ?? "").toUpperCase(),
-        row.otherManager ?? "",
-    ].join("|")
-}
-
 async function insertHoldings(pool: pg.Pool, rows: HoldingInsert[]): Promise<void> {
     if (rows.length === 0) return
-    const deduped = new Map<string, HoldingInsert>()
+    const byFiling = new Map<number, HoldingInsert[]>()
     for (const row of rows) {
-        const key = holdingKey(row)
-        const previous = deduped.get(key)
-        if (!previous || row.infotableSk >= previous.infotableSk) deduped.set(key, row)
+        const group = byFiling.get(row.filingId) ?? []
+        group.push(row)
+        byFiling.set(row.filingId, group)
     }
-    const batch = [...deduped.values()]
+    const batch = [...byFiling.values()].flatMap((group) =>
+        dedupeLines(group.map((row) => ({ ...row, accessionNumber: String(row.filingId) }))),
+    )
     await pool.query(
         `INSERT INTO holding_13f (
             filing_id, security_id, filer_id, infotable_sk, cusip, figi, name_of_issuer, title_of_class,
@@ -284,20 +276,19 @@ async function insertHoldings(pool: pg.Pool, rows: HoldingInsert[]): Promise<voi
             $16::text[], $17::numeric[], $18::numeric[], $19::numeric[], $20::date[], $21::boolean[]
          )
          ON CONFLICT (filing_id, line_key) DO UPDATE
-         SET infotable_sk = EXCLUDED.infotable_sk,
-             figi = EXCLUDED.figi,
+         SET infotable_sk = GREATEST(holding_13f.infotable_sk, EXCLUDED.infotable_sk),
+             figi = COALESCE(EXCLUDED.figi, holding_13f.figi),
              name_of_issuer = EXCLUDED.name_of_issuer,
              title_of_class = EXCLUDED.title_of_class,
-             value_usd = EXCLUDED.value_usd,
-             value_raw = EXCLUDED.value_raw,
+             value_usd = holding_13f.value_usd + EXCLUDED.value_usd,
+             value_raw = holding_13f.value_raw + EXCLUDED.value_raw,
              value_unit = EXCLUDED.value_unit,
-             shares = EXCLUDED.shares,
+             shares = holding_13f.shares + EXCLUDED.shares,
              share_type = EXCLUDED.share_type,
-             voting_sole = EXCLUDED.voting_sole,
-             voting_shared = EXCLUDED.voting_shared,
-             voting_none = EXCLUDED.voting_none,
-             superseded = false
-         WHERE EXCLUDED.infotable_sk >= holding_13f.infotable_sk`,
+             voting_sole = COALESCE(holding_13f.voting_sole, 0) + COALESCE(EXCLUDED.voting_sole, 0),
+             voting_shared = COALESCE(holding_13f.voting_shared, 0) + COALESCE(EXCLUDED.voting_shared, 0),
+             voting_none = COALESCE(holding_13f.voting_none, 0) + COALESCE(EXCLUDED.voting_none, 0),
+             superseded = false`,
         [
             batch.map((row) => row.filingId),
             batch.map((row) => row.securityId),
@@ -493,7 +484,7 @@ export async function ingest13f(log: Log = silent): Promise<void> {
                     const shares = parseNumber(column(row, "SSHPRNAMT"))
                     const rawValue = parseNumber(column(row, "VALUE"))
                     if (shares == null || rawValue == null) return
-                    const normalized = normalize13fValue(rawValue, filing.filedAt)
+                    const normalized = normalize13fValue(rawValue, filing.filedAt, shares)
                     const figi = column(row, "FIGI") || null
                     buffer.push({
                         filingId: filing.filingId,

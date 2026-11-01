@@ -6,9 +6,12 @@
 --
 -- current_holders keeps one row per security and filer:
 --   * 13F lines are long equity only (no puts, calls, or principal amounts)
+--   * a filer's 13F rows come only from that filer's latest 13F report period,
+--     so a name omitted from the latest report is an exit
 --   * a 13D, 13G, or Form 4 position replaces a 13F position for the same
 --     filer when its as-of date is on or after the 13F report period
 --   * the newer of those overrides wins
+--   * a newer 13D/13G or Form 4 that reports zero shares removes the holder
 -- This matches resolveHolders() in src/lib/holders/resolve.ts.
 --
 -- Quarters older than the latest eight are deleted by the ingestion job.
@@ -147,7 +150,17 @@ CREATE TABLE company_relationship (
 CREATE INDEX company_relationship_from_idx ON company_relationship (from_security_id);
 
 CREATE MATERIALIZED VIEW current_holders AS
-WITH long_13f AS (
+WITH latest_filer_period AS (
+    -- One report period per filer, not per security. A later 13F that omits
+    -- a name means the filer has exited that name.
+    SELECT filer_id, MAX(period_of_report) AS report_period
+    FROM filing
+    WHERE form_type LIKE '13F-HR%'
+      AND filer_id IS NOT NULL
+      AND period_of_report IS NOT NULL
+    GROUP BY filer_id
+),
+long_13f AS (
     SELECT
         h.id,
         h.filing_id,
@@ -157,14 +170,12 @@ WITH long_13f AS (
         h.shares,
         h.value_usd
     FROM holding_13f h
+    JOIN latest_filer_period lp
+      ON lp.filer_id = h.filer_id
+     AND lp.report_period = h.report_period
     WHERE NOT h.superseded
       AND COALESCE(h.put_call, '') = ''
       AND COALESCE(NULLIF(h.share_type, ''), 'SH') = 'SH'
-),
-latest_13f_period AS (
-    SELECT security_id, filer_id, MAX(report_period) AS report_period
-    FROM long_13f
-    GROUP BY security_id, filer_id
 ),
 agg_13f AS (
     SELECT
@@ -172,15 +183,11 @@ agg_13f AS (
         l.filer_id,
         SUM(l.shares) AS shares,
         SUM(l.value_usd) AS value_usd,
-        lp.report_period AS as_of,
+        l.report_period AS as_of,
         (ARRAY_AGG(l.filing_id ORDER BY f.filed_at DESC, f.accession_number DESC))[1] AS filing_id
     FROM long_13f l
-    JOIN latest_13f_period lp
-      ON lp.security_id = l.security_id
-     AND lp.filer_id = l.filer_id
-     AND lp.report_period = l.report_period
     JOIN filing f ON f.id = l.filing_id
-    GROUP BY l.security_id, l.filer_id, lp.report_period
+    GROUP BY l.security_id, l.filer_id, l.report_period
 ),
 pos_13f AS (
     SELECT
@@ -325,7 +332,8 @@ SELECT
     w.filing_url
 FROM winners w
 JOIN security s ON s.id = w.security_id
-JOIN filer fl ON fl.id = w.filer_id;
+JOIN filer fl ON fl.id = w.filer_id
+WHERE w.shares IS NULL OR w.shares > 0;
 
 CREATE UNIQUE INDEX current_holders_pk ON current_holders (security_id, filer_id);
 CREATE INDEX current_holders_ticker_idx ON current_holders (ticker);
