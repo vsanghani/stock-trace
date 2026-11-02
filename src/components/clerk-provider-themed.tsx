@@ -33,8 +33,13 @@ const PALETTE = {
 } as const
 
 export function ClerkProviderThemed({ children }: { children: React.ReactNode }) {
+    const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim()
     const { resolvedTheme } = useTheme()
     const isDark = resolvedTheme === "dark"
+
+    if (!publishableKey) {
+        return children
+    }
 
     return (
         <ClerkProvider

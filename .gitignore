@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — never commit these; see README.md for the variables to set
+# env files — never commit these; copy .env.example to .env.local
 .env*
+!.env.example
 
 # vercel
 .vercel

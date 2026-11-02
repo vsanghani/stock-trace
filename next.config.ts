@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { warnMissingEnv } from "./src/lib/env";
+
+warnMissingEnv();
 
 const nextConfig: NextConfig = {
   /* config options here */

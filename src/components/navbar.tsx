@@ -31,8 +31,7 @@ const PUBLIC_LINKS = [
     { href: "/blog", label: "Blog" },
 ]
 
-export function Navbar() {
-    const { isSignedIn } = useAuth()
+function NavbarContent({ isSignedIn }: { isSignedIn: boolean }) {
     const [isOpen, setIsOpen] = React.useState(false)
     const [experimentsOpen, setExperimentsOpen] = React.useState(false)
     const [mobileExperimentsOpen, setMobileExperimentsOpen] = React.useState(false)
@@ -248,4 +247,16 @@ export function Navbar() {
             </AnimatePresence>
         </nav>
     )
+}
+
+function NavbarWithClerk() {
+    const { isSignedIn } = useAuth()
+    return <NavbarContent isSignedIn={Boolean(isSignedIn)} />
+}
+
+export function Navbar() {
+    if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim()) {
+        return <NavbarContent isSignedIn={false} />
+    }
+    return <NavbarWithClerk />
 }

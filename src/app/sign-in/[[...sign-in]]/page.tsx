@@ -15,7 +15,11 @@ export default function SignInPage() {
                     Sign in to pick up your research where you left off.
                 </p>
             </div>
-            <SignIn signUpUrl="/sign-up" fallbackRedirectUrl="/dashboard" />
+            {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ? (
+                <SignIn signUpUrl="/sign-up" fallbackRedirectUrl="/dashboard" />
+            ) : (
+                <p className="text-sm text-muted-foreground">Sign-in is not configured.</p>
+            )}
         </div>
     )
 }
