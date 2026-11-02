@@ -13,8 +13,7 @@ import { StockSearch } from "@/components/stock-search"
  * so Clerk drops them straight onto the requested stock once authenticated.
  * Signed-in users skip the detour.
  */
-export function LandingSearch() {
-    const { isSignedIn } = useAuth()
+function LandingSearchForm({ isSignedIn }: { isSignedIn: boolean }) {
     const router = useRouter()
     const [pending, setPending] = React.useState(false)
 
@@ -44,4 +43,16 @@ export function LandingSearch() {
             )}
         </div>
     )
+}
+
+function LandingSearchWithClerk() {
+    const { isSignedIn } = useAuth()
+    return <LandingSearchForm isSignedIn={Boolean(isSignedIn)} />
+}
+
+export function LandingSearch() {
+    if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim()) {
+        return <LandingSearchForm isSignedIn={false} />
+    }
+    return <LandingSearchWithClerk />
 }

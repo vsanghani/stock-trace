@@ -38,11 +38,11 @@ npm install
 
 ### Configure Environment
 
-Create a `.env.local` file in the project root and add the variables listed in
-[Environment Variables](#environment-variables) below. Only the two Clerk keys are required — create
-a free application at [dashboard.clerk.com](https://dashboard.clerk.com) and copy its publishable and
-secret keys. Everything else is optional; price and fundamentals data comes from Yahoo Finance and
-needs no key.
+Copy `.env.example` to `.env.local` and fill in the variables listed in
+[Environment Variables](#environment-variables) below. The dev server boots without them: public
+pages load, and protected routes return 503 until Clerk is configured. For real sign-in, create a
+free application at [dashboard.clerk.com](https://dashboard.clerk.com) and copy its publishable and
+secret keys. Price and fundamentals data comes from Yahoo Finance and needs no key.
 
 `.env.local` is gitignored and must never be committed.
 
@@ -72,8 +72,8 @@ npm run typecheck
 
 ## Environment Variables
 
-This table is the single source of truth for configuration. There is no `.env.example` in the repo —
-by design, so that no file resembling an env file is ever tracked by git.
+Names and one-line descriptions also live in `.env.example`. That file has empty secrets and is safe
+to commit; `.env.local` is gitignored and must never be committed.
 
 Set these in `.env.local` for local development, and as environment variables in your hosting
 provider for production. **Never commit real values to this file or any other tracked file.**
@@ -104,6 +104,8 @@ These match the routes implemented in this app. Change them only if you move the
 | `OPENROUTER_API_KEY` | **Server — secret** | Enables AI news-sentiment scoring (senLogic) and forecast assumptions via [OpenRouter](https://openrouter.ai/keys). |
 | `ALPHA_VANTAGE_API_KEY` | **Server — secret** | News headlines feeding sentiment analysis. [Get a key](https://www.alphavantage.co/support/#api-key). |
 | `FMP_API_KEY` | **Server — secret** | Supplementary fundamentals for the DCF model. [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs). |
+| `DATABASE_URL` | **Server — secret** | Postgres connection string. |
+| `SEC_USER_AGENT` | Server | User-Agent for SEC EDGAR requests, including a contact email. |
 
 Variables prefixed `NEXT_PUBLIC_` are inlined into the client bundle and are visible to anyone using
 the site. Never give a secret that prefix. Without `OPENROUTER_API_KEY` and `ALPHA_VANTAGE_API_KEY`,

@@ -15,7 +15,11 @@ export default function SignUpPage() {
                     Free to start. No card required.
                 </p>
             </div>
-            <SignUp signInUrl="/sign-in" fallbackRedirectUrl="/dashboard" />
+            {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ? (
+                <SignUp signInUrl="/sign-in" fallbackRedirectUrl="/dashboard" />
+            ) : (
+                <p className="text-sm text-muted-foreground">Sign-in is not configured.</p>
+            )}
         </div>
     )
 }
