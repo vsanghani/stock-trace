@@ -23,6 +23,9 @@ export interface SlidingWindowStore {
 /** Public autocomplete. Still calls Yahoo, so it is limited. */
 export const SEARCH_RATE_LIMIT: RateLimitPolicy = { name: "search", limit: 60, windowMs: 60_000 }
 
+/** Liveness checks. Same limiter as the other API routes, separate bucket. */
+export const HEALTH_RATE_LIMIT: RateLimitPolicy = { name: "health", limit: 60, windowMs: 60_000 }
+
 /** Quotes, options, and fundamentals. */
 export const MARKET_RATE_LIMIT: RateLimitPolicy = { name: "market", limit: 30, windowMs: 60_000 }
 
@@ -31,6 +34,7 @@ export const AI_RATE_LIMIT: RateLimitPolicy = { name: "ai", limit: 10, windowMs:
 
 export function rateLimitPolicyForPath(pathname: string): RateLimitPolicy {
     if (pathname.startsWith("/api/sentiment")) return AI_RATE_LIMIT
+    if (pathname.startsWith("/api/health")) return HEALTH_RATE_LIMIT
     if (pathname.startsWith("/api/search")) return SEARCH_RATE_LIMIT
     return MARKET_RATE_LIMIT
 }

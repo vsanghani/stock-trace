@@ -80,8 +80,35 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ""
         run: npm run build
 
+  # Records whether Preview smoke is allowed to run. Secrets cannot be read from a
+  # job-level `if`, so this job publishes a boolean output and the smoke job's
+  # own `if` skips the job. A skipped job is not a green run. Do not mark
+  # "Preview smoke" required until VERCEL_AUTOMATION_BYPASS_SECRET is set:
+  # GitHub reports a skipped job's merge conclusion as success.
+  smoke-preflight:
+    name: Preview smoke preflight
+    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && !startsWith(github.event.deployment.environment || '', 'Production')
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.secret.outputs.enabled }}
+    steps:
+      - name: Check bypass secret
+        id: secret
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          set -eu
+          if [ -n "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Preview smoke skipped::VERCEL_AUTOMATION_BYPASS_SECRET is not set. The Preview smoke job is skipped and must not be a required check until that secret exists."
+          fi
+
   smoke:
-    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+    name: Preview smoke
+    needs: smoke-preflight
+    if: needs.smoke-preflight.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Select preview deployment
@@ -89,50 +116,54 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const environment = String(context.payload.deployment?.environment ?? "")
-            if (/production/i.test(environment)) {
-              core.notice("Production deployment. Preview smoke checks were skipped.")
-              core.setOutput("run", "false")
-              return
-            }
-
             const ref = String(context.payload.deployment?.ref ?? "")
+            const sha = String(context.payload.deployment?.sha ?? "")
             const { owner, repo } = context.repo
-            const { data: pulls } = await github.rest.pulls.list({
+            const pulls = await github.paginate(github.rest.pulls.list, {
               owner,
               repo,
               state: "open",
-              per_page: 50,
+              per_page: 100,
             })
-            const match = pulls.find((pull) => {
-              const base = pull.base.ref
-              const watched = base === "development" || base.startsWith("feature/")
-              return watched && pull.head.ref === ref
-            })
+            const same = (left, right) => left.length > 0 && left === right
+            const watched = pulls.filter((pull) => pull.base.ref === "development" || pull.base.ref.startsWith("feature/"))
+            const match = watched.find((pull) =>
+              same(ref, pull.head.ref) ||
+              same(ref, pull.head.sha) ||
+              same(sha, pull.head.ref) ||
+              same(sha, pull.head.sha)
+            )
             if (!match) {
-              core.notice(`No open pull request into development or feature/** for ref ${ref}. Preview smoke checks were skipped.`)
-              core.setOutput("run", "false")
+              core.setFailed(
+                `No open pull request into development or feature/** matches this deployment. ` +
+                `deployment.ref=${ref || "(empty)"} deployment.sha=${sha || "(empty)"}. ` +
+                `Compared both values with pull.head.ref and pull.head.sha ` +
+                `(${watched.length} watched pulls of ${pulls.length} open). Smoke was not skipped.`
+              )
               return
             }
 
             const url = context.payload.deployment_status.environment_url || context.payload.deployment_status.target_url
             if (!url || !String(url).startsWith("https://")) {
-              core.setFailed("Preview deployment succeeded without an https environment URL.")
+              core.setFailed(`Preview deployment for pull request #${match.number} succeeded without an https environment URL.`)
               return
             }
-            core.setOutput("run", "true")
+            core.info(`Matched pull request #${match.number} (${match.head.ref} @ ${match.head.sha}).`)
             core.setOutput("url", String(url))
 
       - name: Request preview
-        if: steps.gate.outputs.run == 'true'
         env:
           PREVIEW_URL: ${{ steps.gate.outputs.url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -eu
           if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
-            echo "::notice title=Preview smoke skipped::VERCEL_AUTOMATION_BYPASS_SECRET is not set. The preview was not requested. Add that repository secret to enable the check."
-            exit 0
+            echo "VERCEL_AUTOMATION_BYPASS_SECRET was empty inside Preview smoke."
+            exit 1
+          fi
+          if [ -z "${PREVIEW_URL}" ]; then
+            echo "Preview URL was not set. The deployment match step did not succeed."
+            exit 1
           fi
 
           request() {
@@ -156,4 +187,4 @@ jobs:
           }
 
           request "/"
-          request "/api/search?q=AAPL"
+          request "/api/health"

@@ -35,7 +35,7 @@ describe("proxy without clerk keys", () => {
         delete env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
         delete env.CLERK_SECRET_KEY
 
-        for (const path of ["/", "/?ticker=AAPL", "/blog", "/blog/hello", "/about", "/company", "/privacy", "/terms", "/api/search"]) {
+        for (const path of ["/", "/?ticker=AAPL", "/blog", "/blog/hello", "/about", "/company", "/privacy", "/terms", "/api/search", "/api/health", "/api/health?ready=1"]) {
             const response = await run(path)
             expect(response.status, path).toBe(200)
             expect(response.headers.get("x-middleware-next"), path).toBe("1")

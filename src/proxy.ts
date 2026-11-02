@@ -9,6 +9,7 @@ import { getServerEnv } from "@/lib/env.server";
  *
  * `/api/search` stays public so the landing page's ticker autocomplete works for
  * visitors; it only resolves symbol names and exposes no market data.
+ * `/api/health` is a liveness check: no session, no upstream calls.
  */
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -20,6 +21,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/search",
+  "/api/health",
 ]);
 
 const AUTH_NOT_CONFIGURED_PAGE = `<!DOCTYPE html>

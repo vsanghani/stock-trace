@@ -132,10 +132,15 @@ the process keeps running. `src/lib/env.ts` is the typed list.
 4. `npm test`
 5. `npm run build` with dummy environment values so startup validation runs
 
-A separate job listens for `deployment_status`. After the Vercel preview for an open pull request
-into those branches is successful, it requests `/` and `/api/search?q=AAPL`. Any 5xx fails the job.
-The request sends `x-vercel-protection-bypass` from the repository secret
-`VERCEL_AUTOMATION_BYPASS_SECRET`. When that secret is absent the job skips with a notice.
+A separate **Preview smoke** job listens for `deployment_status`. It runs only for a non-production
+deployment whose `deployment.ref` or `deployment.sha` matches an open pull request into `development`
+or `feature/**` (`pull.head.ref` or `pull.head.sha`). If nothing matches, the job fails. It then
+requests `/` and `/api/health`. Any 5xx fails the job. The request sends `x-vercel-protection-bypass`
+from the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`.
+
+When that secret is absent, **Preview smoke** is skipped at job level (it does not run and exit
+green). GitHub still reports a skipped job's merge conclusion as success, so do not mark Preview
+smoke as a required check until the secret is set.
 
 GitHub only starts `deployment_status` workflows from the default branch, so the smoke job stays
 quiet until this workflow file is on that branch. The workflow does not change Vercel project
@@ -154,6 +159,7 @@ Access is enforced in `src/proxy.ts` (Next.js 16 renames the middleware file fro
 | `/blog`, `/blog/[slug]` | Public | MDX articles |
 | `/sign-in`, `/sign-up` | Public | Clerk auth flows |
 | `/api/search` | Public | Ticker autocomplete for the landing page (symbol names only) |
+| `/api/health` | Public | Liveness JSON (`{ ok: true }`). No auth, database, or upstream calls. Rate-limited. |
 | `/dashboard` | **Protected** | Stock research dashboard (`/dashboard?ticker=AAPL`) |
 | `/valuation`, `/options`, `/pnl-calculator` | **Protected** | Analysis tools |
 | `/senlogic`, `/correlation`, `/stress-test`, `/whisper-alerts` | **Protected** | Experiments |
