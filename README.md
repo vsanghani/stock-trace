@@ -38,11 +38,11 @@ npm install
 
 ### Configure Environment
 
-Create a `.env.local` file in the project root and add the variables listed in
-[Environment Variables](#environment-variables) below. Only the two Clerk keys are required — create
-a free application at [dashboard.clerk.com](https://dashboard.clerk.com) and copy its publishable and
-secret keys. Everything else is optional; price and fundamentals data comes from Yahoo Finance and
-needs no key.
+Copy `.env.example` to `.env.local` and fill in the variables listed in
+[Environment Variables](#environment-variables) below. The dev server boots without them: public
+pages load, and protected routes return 503 until Clerk is configured. For real sign-in, create a
+free application at [dashboard.clerk.com](https://dashboard.clerk.com) and copy its publishable and
+secret keys. Price and fundamentals data comes from Yahoo Finance and needs no key.
 
 `.env.local` is gitignored and must never be committed.
 
@@ -72,8 +72,8 @@ npm run typecheck
 
 ## Environment Variables
 
-This table is the single source of truth for configuration. There is no `.env.example` in the repo —
-by design, so that no file resembling an env file is ever tracked by git.
+Names and one-line descriptions also live in `.env.example`. That file has empty secrets and is safe
+to commit; `.env.local` is gitignored and must never be committed.
 
 Set these in `.env.local` for local development, and as environment variables in your hosting
 provider for production. **Never commit real values to this file or any other tracked file.**
@@ -104,10 +104,48 @@ These match the routes implemented in this app. Change them only if you move the
 | `OPENROUTER_API_KEY` | **Server — secret** | Enables AI news-sentiment scoring (senLogic) and forecast assumptions via [OpenRouter](https://openrouter.ai/keys). |
 | `ALPHA_VANTAGE_API_KEY` | **Server — secret** | News headlines feeding sentiment analysis. [Get a key](https://www.alphavantage.co/support/#api-key). |
 | `FMP_API_KEY` | **Server — secret** | Supplementary fundamentals for the DCF model. [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs). |
+| `DATABASE_URL` | **Server — secret** | Postgres connection string. |
+| `SEC_USER_AGENT` | Server | User-Agent for SEC EDGAR requests, including a contact email. |
+| `SENTRY_DSN` | **Server — secret** | [Sentry](https://sentry.io) DSN for server and edge errors. Free tier. Unset disables Sentry. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Client | Sentry DSN for browser errors. Unset disables client reporting. |
+| `SENTRY_AUTH_TOKEN` | **Server — secret** | Build-time token for source map upload. Unset skips the upload. |
+| `SENTRY_ORG` | Server | Sentry organization slug. Required with `SENTRY_PROJECT` before maps are uploaded. |
+| `SENTRY_PROJECT` | Server | Sentry project slug. Required with `SENTRY_ORG` before maps are uploaded. |
+| `UPSTASH_REDIS_REST_URL` | **Server — secret** | Upstash Redis REST URL for shared API rate limits. Free tier. Unset uses an in-memory window. |
+| `UPSTASH_REDIS_REST_TOKEN` | **Server — secret** | Upstash Redis REST token. Both this and the URL are required. |
 
 Variables prefixed `NEXT_PUBLIC_` are inlined into the client bundle and are visible to anyone using
 the site. Never give a secret that prefix. Without `OPENROUTER_API_KEY` and `ALPHA_VANTAGE_API_KEY`,
-sentiment analysis and forecast assumptions fall back to sample data rather than failing.
+sentiment analysis and forecast assumptions fall back to sample data rather than failing. Sentry and
+Upstash are no-ops until their variables are set. A bad optional value is logged once and ignored;
+the process keeps running. `src/lib/env.ts` is the typed list.
+
+---
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on pull requests into `development` and `feature/**`:
+
+1. `npm ci`
+2. `npm run typecheck`
+3. ESLint on the files changed in the pull request (the tree still has older lint failures)
+4. `npm test`
+5. `npm run build` with dummy environment values so startup validation runs
+
+A separate **Preview smoke** job listens for `deployment_status`. GitHub runs that workflow
+from the deployed ref's workflow file, including a pull request branch, not only from the default
+branch. The job runs for a non-production deployment. It smokes the preview when an open pull
+request into `development` or `feature/**` has that deployment's commit as `head.sha` (or the same
+branch name in `deployment.ref` and a matching head SHA). If the branch matches a pull request but
+the commit does not, the job fails. Anything else — no open pull request, a plain branch deploy, or
+a SHA with no matching pull request — logs a notice and exits 0. The requests are `/` and
+`/api/health`. Any 5xx fails the job. The request sends `x-vercel-protection-bypass` from the
+repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`.
+
+When that secret is absent, **Preview smoke** is skipped at job level (it does not run and exit
+green). GitHub still reports a skipped job's merge conclusion as success, so do not mark Preview
+smoke as a required check until the secret is set. The workflow does not change Vercel project
+settings or write repository secrets.
 
 ---
 
@@ -122,6 +160,7 @@ Access is enforced in `src/proxy.ts` (Next.js 16 renames the middleware file fro
 | `/blog`, `/blog/[slug]` | Public | MDX articles |
 | `/sign-in`, `/sign-up` | Public | Clerk auth flows |
 | `/api/search` | Public | Ticker autocomplete for the landing page (symbol names only) |
+| `/api/health` | Public | Liveness JSON (`{ ok: true }`). No auth, database, or upstream calls. Rate-limited. |
 | `/dashboard` | **Protected** | Stock research dashboard (`/dashboard?ticker=AAPL`) |
 | `/valuation`, `/options`, `/pnl-calculator` | **Protected** | Analysis tools |
 | `/senlogic`, `/correlation`, `/stress-test`, `/whisper-alerts` | **Protected** | Experiments |

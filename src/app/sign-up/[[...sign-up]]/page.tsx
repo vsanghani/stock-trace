@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs"
+import { hasClerkPublishableKey } from "@/lib/env"
 import { pageMetadata } from "@/lib/site"
 
 export const metadata = pageMetadata(
@@ -15,7 +16,11 @@ export default function SignUpPage() {
                     Free to start. No card required.
                 </p>
             </div>
-            <SignUp signInUrl="/sign-in" fallbackRedirectUrl="/dashboard" />
+            {hasClerkPublishableKey() ? (
+                <SignUp signInUrl="/sign-in" fallbackRedirectUrl="/dashboard" />
+            ) : (
+                <p className="text-sm text-muted-foreground">Sign-in is not configured.</p>
+            )}
         </div>
     )
 }

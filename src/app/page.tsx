@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { LandingSearch } from "@/components/landing/landing-search"
 import { MarketsCovered } from "@/components/landing/markets-covered"
+import { hasClerkPublishableKey } from "@/lib/env"
 import { SITE_NAME } from "@/lib/site"
 
 const FEATURES = [
@@ -96,6 +97,8 @@ export default async function LandingPage({
         redirect(`/dashboard?ticker=${encodeURIComponent(ticker)}`)
     }
 
+    const clerkReady = hasClerkPublishableKey()
+
     return (
         <div className="relative z-10">
             {/* Hero */}
@@ -112,30 +115,50 @@ export default async function LandingPage({
                 </div>
 
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                    <Show when="signed-out">
-                        <Link
-                            href="/sign-up"
-                            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                        >
-                            Create a free account
-                            <ArrowRight className="w-4 h-4" />
-                        </Link>
-                        <Link
-                            href="/sign-in"
-                            className="inline-flex items-center h-11 px-6 rounded-xl border border-border text-sm font-semibold hover:bg-secondary/50 transition-colors"
-                        >
-                            Sign in
-                        </Link>
-                    </Show>
-                    <Show when="signed-in">
-                        <Link
-                            href="/dashboard"
-                            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                        >
-                            Open your dashboard
-                            <ArrowRight className="w-4 h-4" />
-                        </Link>
-                    </Show>
+                    {clerkReady ? (
+                        <>
+                            <Show when="signed-out">
+                                <Link
+                                    href="/sign-up"
+                                    className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                                >
+                                    Create a free account
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <Link
+                                    href="/sign-in"
+                                    className="inline-flex items-center h-11 px-6 rounded-xl border border-border text-sm font-semibold hover:bg-secondary/50 transition-colors"
+                                >
+                                    Sign in
+                                </Link>
+                            </Show>
+                            <Show when="signed-in">
+                                <Link
+                                    href="/dashboard"
+                                    className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                                >
+                                    Open your dashboard
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </Show>
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                href="/sign-up"
+                                className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                            >
+                                Create a free account
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                            <Link
+                                href="/sign-in"
+                                className="inline-flex items-center h-11 px-6 rounded-xl border border-border text-sm font-semibold hover:bg-secondary/50 transition-colors"
+                            >
+                                Sign in
+                            </Link>
+                        </>
+                    )}
                 </div>
 
                 <div className="mt-16">
@@ -210,18 +233,28 @@ export default async function LandingPage({
                         Creating an account is free and takes about thirty seconds. Your portfolio
                         tools stay on your device.
                     </p>
-                    <Show
-                        when="signed-out"
-                        fallback={
+                    {clerkReady ? (
+                        <Show
+                            when="signed-out"
+                            fallback={
+                                <Link
+                                    href="/dashboard"
+                                    className="mt-8 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                                >
+                                    Open your dashboard
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            }
+                        >
                             <Link
-                                href="/dashboard"
+                                href="/sign-up"
                                 className="mt-8 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
                             >
-                                Open your dashboard
+                                Create a free account
                                 <ArrowRight className="w-4 h-4" />
                             </Link>
-                        }
-                    >
+                        </Show>
+                    ) : (
                         <Link
                             href="/sign-up"
                             className="mt-8 inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
@@ -229,7 +262,7 @@ export default async function LandingPage({
                             Create a free account
                             <ArrowRight className="w-4 h-4" />
                         </Link>
-                    </Show>
+                    )}
                     <p className="mt-10 max-w-xl text-xs text-muted-foreground">
                         {SITE_NAME} is a research tool, not financial advice. Market data is
                         provided as-is and may be delayed or incomplete. Always do your own

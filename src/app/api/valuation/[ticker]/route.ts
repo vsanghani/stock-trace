@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server"
 
 import { CACHE_TTL_SECONDS, fetchValuationSnapshot } from "@/lib/api/stockData"
+import { absentBodySchema, parseJsonBody, parseWithSchema, tickerParamsSchema } from "@/lib/api/validate"
 
 export const revalidate = 3600
 
-export async function GET(_request: Request, { params }: { params: Promise<{ ticker: string }> }) {
-    const { ticker } = await params
+export async function GET(request: Request, { params }: { params: Promise<{ ticker: string }> }) {
+    const parsed = parseWithSchema(tickerParamsSchema, await params)
+    if (!parsed.ok) return parsed.response
 
-    if (!ticker || !/^[A-Za-z0-9.\-^]{1,12}$/.test(ticker)) {
-        return NextResponse.json({ error: "Invalid ticker symbol", ticker }, { status: 400 })
-    }
+    const body = await parseJsonBody(request, absentBodySchema)
+    if (!body.ok) return body.response
+
+    const { ticker } = parsed.data
 
     try {
         const snapshot = await fetchValuationSnapshot(ticker)
@@ -20,10 +23,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tic
             },
         })
     } catch (error) {
-        console.error(`Valuation lookup failed for ${ticker}:`, error)
-        return NextResponse.json(
-            { error: `No valuation data available for ${ticker.toUpperCase()}`, ticker },
-            { status: 404 }
-        )
+        const message = error instanceof Error ? error.message : "valuation lookup failed"
+        console.error(`Valuation lookup failed for ${ticker}: ${message}`)
+        return NextResponse.json({ error: "No valuation data available" }, { status: 404 })
     }
 }
