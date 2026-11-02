@@ -3,10 +3,11 @@
  * 3 January 2023. Earlier filings report thousands of dollars.
  * See SEC Release No. 34-95148 and Form 13F Special Instruction 8.
  *
- * A second pass compares each line's implied price with the median for the
- * same CUSIP and report period. It rescales only when that price is about
- * 1000x off a median drawn from enough filers. There is no absolute price
- * band: a correctly reported sub-$1 stock stays as filed.
+ * A second pass compares each current line's implied price with the median for
+ * the same CUSIP and report period. Superseded rows (replaced by a later
+ * amendment) are not part of that median and are not rescaled. A line is
+ * rescaled only when its price is about 1000x off a median drawn from enough
+ * current filers. There is no absolute price band.
  */
 export const DOLLAR_VALUE_START = "2023-01-03"
 
@@ -39,6 +40,8 @@ export interface PriceCheckLine {
     valueUnit: ValueUnit
     putCall?: string | null
     shareType?: string | null
+    /** Replaced by a later amendment. Excluded from the median and left unchanged. */
+    superseded?: boolean
 }
 
 export interface ReconciledPriceLine extends PriceCheckLine {
@@ -59,6 +62,7 @@ export function normalize13fValue(raw: number, filedAt: string, shares?: number)
 }
 
 function isLongEquity(line: PriceCheckLine): boolean {
+    if (line.superseded) return false
     if (line.putCall) return false
     const shareType = (line.shareType ?? "SH").toUpperCase()
     return shareType === "SH" && line.shares > 0 && Number.isFinite(line.valueUsd)
@@ -84,7 +88,7 @@ function thousandFold(ratio: number): "high" | "low" | null {
  * Adjust 13F values that disagree with other filers of the same security by
  * about 1000x. The median is one share-weighted price per filer. Below
  * MIN_FILERS_FOR_PRICE_MEDIAN the date-rule value is kept and the line is
- * flagged. Puts, calls, and principal-amount rows are left unchanged.
+ * flagged. Superseded rows, puts, calls, and principal-amount rows are left unchanged.
  */
 export function reconcileImpliedPrices<T extends PriceCheckLine>(lines: readonly T[]): Array<T & ReconciledPriceLine> {
     const members = new Map<string, T[]>()

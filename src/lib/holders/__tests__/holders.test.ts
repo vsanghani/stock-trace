@@ -91,6 +91,26 @@ describe("implied price against the filer median", () => {
         expect(reconciled.filter((line) => line.filerCik !== "outlier").every((line) => !line.unitCorrected)).toBe(true)
     })
 
+    it("ignores superseded lines when they would otherwise set the median", () => {
+        const active = [priceLine("active-a", 400, 1_000), priceLine("active-b", 400, 1_000)]
+        const stale = [0, 1, 2].map((index) => ({
+            ...priceLine(`stale-${index}`, 400_000, 1_000),
+            superseded: true,
+        }))
+        const reconciled = reconcileImpliedPrices([...active, ...stale])
+
+        for (const line of reconciled.filter((row) => !row.superseded)) {
+            expect(line.valueUsd).toBe(400)
+            expect(line.unitCorrected).toBe(false)
+            expect(line.unitFlagged).toBe(true)
+        }
+        for (const line of reconciled.filter((row) => row.superseded)) {
+            expect(line.valueUsd).toBe(400_000)
+            expect(line.unitCorrected).toBe(false)
+            expect(line.unitFlagged).toBe(false)
+        }
+    })
+
     it("flags a single-filer CUSIP and does not rescale it", () => {
         const [cheap] = reconcileImpliedPrices([priceLine("only", 400, 1_000, "111111111")])
         expect(cheap).toMatchObject({ valueUsd: 400, impliedPrice: 0.4, unitCorrected: false, unitFlagged: true })

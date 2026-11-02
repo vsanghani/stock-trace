@@ -529,8 +529,8 @@ export async function ingest13f(log: Log = silent): Promise<void> {
         }
     }
 
-    await reconcileStoredHoldings(pool, log)
     await recomputeSuperseded(pool, [...touched.values()], log)
+    await reconcileStoredHoldings(pool, log)
 }
 
 async function reconcileStoredHoldings(pool: pg.Pool, log: Log): Promise<void> {
@@ -553,6 +553,7 @@ async function reconcileStoredHoldings(pool: pg.Pool, log: Log): Promise<void> {
                     value_unit, put_call, share_type, value_unit_flagged
              FROM holding_13f
              WHERE cusip = $1
+               AND NOT superseded
                AND shares > 0
                AND COALESCE(put_call, '') = ''
                AND COALESCE(NULLIF(share_type, ''), 'SH') = 'SH'`,

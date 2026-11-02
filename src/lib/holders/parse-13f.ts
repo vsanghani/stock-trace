@@ -175,14 +175,6 @@ export function clean13fDataset(input: {
         linesByAccession.set(accession, list)
     }
 
-    const reconciled = reconcileImpliedPrices([...linesByAccession.values()].flat())
-    linesByAccession.clear()
-    for (const line of reconciled) {
-        const list = linesByAccession.get(line.accessionNumber) ?? []
-        list.push(line)
-        linesByAccession.set(line.accessionNumber, list)
-    }
-
     const groups = new Map<string, CleanFiling[]>()
     for (const filing of filings.values()) {
         const key = `${filing.filerCik}|${filing.periodOfReport}`
@@ -211,11 +203,14 @@ export function clean13fDataset(input: {
         keptFilings.push(...group.filter((filing) => used.has(filing.accessionNumber)))
     }
 
+    // Amendments mark the replaced book first, so the median only sees current lines.
+    const reconciledHoldings = reconcileImpliedPrices(holdings)
+
     keptFilings.sort((a, b) => a.filedAt.localeCompare(b.filedAt) || a.accessionNumber.localeCompare(b.accessionNumber))
 
     return {
         filings: keptFilings,
-        holdings,
+        holdings: reconciledHoldings,
         rejectedCusips,
         skippedNotices,
         skippedPeriods,
