@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, Download, Loader2, Target, TrendingUp, History } fr
 import { StockData } from "@/types/stock"
 import { SentimentBadge } from "@/components/SentimentBadge"
 import { CompanyInfo } from "@/components/company-info"
+import { HoldersPanel } from "@/components/holders-panel"
 
 interface StockDashboardProps {
     ticker: string
@@ -269,8 +270,9 @@ ROE: ${data.returnOnEquity ? (data.returnOnEquity * 100).toFixed(2) + '%' : 'N/A
                     </div>
                 </div>
 
-                {/* Right Column: Company Bio (40%) */}
-                <div className="lg:col-span-2">
+                {/* Right Column: holders and company profile */}
+                <div className="lg:col-span-2 space-y-6">
+                    <HoldersPanel ticker={ticker} />
                     <CompanyInfo data={data} />
                 </div>
             </div>

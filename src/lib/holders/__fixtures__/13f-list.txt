@@ -1,0 +1,7 @@
+037833100*APPLE INC                     COM                           
+037833901 APPLE INC                     CALL                          
+594918104*MICROSOFT CORP                COM                           
+67066G104*NVIDIA CORPORATION            COM                           
+02079K305*ALPHABET INC                  CAP STK CL A                  
+02079K107*ALPHABET INC                  CAP STK CL C                  
+000000000 NOT A SECURITY                COM                        *D*

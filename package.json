@@ -10,32 +10,46 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "ingest": "tsx scripts/ingest.ts",
+    "ingest:cik": "tsx scripts/ingest.ts cik",
+    "ingest:13f": "tsx scripts/ingest.ts 13f",
+    "ingest:ownership": "tsx scripts/ingest.ts ownership",
+    "ingest:form4": "tsx scripts/ingest.ts form4",
+    "ingest:daily": "tsx scripts/ingest.ts daily"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.1",
     "@tailwindcss/typography": "^0.5.19",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "fast-xml-parser": "^5.11.2",
     "framer-motion": "^12.26.2",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.3",
     "next-mdx-remote": "^6.0.0",
     "next-themes": "^0.4.6",
+    "pg": "^8.23.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.4.0",
-    "yahoo-finance2": "^3.11.2"
+    "yahoo-finance2": "^3.11.2",
+    "yauzl": "^3.4.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/yauzl": "^3.4.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.3",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.11"
   }
