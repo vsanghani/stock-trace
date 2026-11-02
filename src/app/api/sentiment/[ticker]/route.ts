@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 import { SentimentResult, NewsHeadline, getSentimentLabel } from '@/types/sentiment'
 import { SITE_NAME, siteUrl } from '@/lib/site'
 import { getServerEnv } from '@/lib/env.server'
 import { fetchUpstream } from '@/lib/api/upstream'
 import { absentBodySchema, parseJsonBody, parseWithSchema, tickerParamsSchema } from '@/lib/api/validate'
 import { captureServerException } from '@/lib/sentry'
+
+const alphaVantageNewsSchema = z.object({
+    feed: z.array(z.object({
+        title: z.string().optional(),
+        source: z.string().optional(),
+        time_published: z.string().optional(),
+        url: z.string().optional(),
+    })).optional(),
+})
 
 interface RouteParams {
     params: Promise<{ ticker: string }>
@@ -108,13 +118,14 @@ async function fetchNewsHeadlines(ticker: string): Promise<NewsHeadline[]> {
             { service: 'Alpha Vantage', timeoutMs: 8_000 }
         )
 
-        const data = await response.json()
+        const payload: unknown = await response.json()
+        const parsed = alphaVantageNewsSchema.safeParse(payload)
 
-        if (data.feed && Array.isArray(data.feed)) {
-            return data.feed.slice(0, 10).map((item: any) => ({
-                title: item.title,
-                source: item.source,
-                publishedAt: item.time_published,
+        if (parsed.success && parsed.data.feed) {
+            return parsed.data.feed.slice(0, 10).map((item) => ({
+                title: item.title ?? '',
+                source: item.source ?? '',
+                publishedAt: item.time_published ?? '',
                 url: item.url,
             }))
         }

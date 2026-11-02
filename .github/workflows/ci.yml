@@ -15,22 +15,21 @@ permissions:
   pull-requests: read
   deployments: read
 
-concurrency:
-  group: ci-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: true
-
 jobs:
   verify:
     if: github.event_name == 'pull_request'
+    concurrency:
+      group: verify-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -110,10 +109,17 @@ jobs:
     name: Preview smoke
     needs: smoke-preflight
     if: needs.smoke-preflight.outputs.enabled == 'true'
+    # deployment_status has no pull_request.number. Key on the deployed
+    # branch so a newer preview cancels the older smoke instead of falling
+    # through to a unique run id. Cancelling is safe: the cancelled run does
+    # not report success, and the new run checks the preview that matters.
+    concurrency:
+      group: smoke-${{ github.event.deployment.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout matcher
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Select preview deployment
         id: gate

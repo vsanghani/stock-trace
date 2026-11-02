@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import type { CallOrPut, OptionsOptions } from 'yahoo-finance2/modules/options';
+
 import { yahooFinance } from '@/lib/api/yahoo';
 import {
     absentBodySchema,
@@ -9,6 +11,31 @@ import {
     parseWithSchema,
 } from '@/lib/api/validate';
 import { captureServerException } from '@/lib/sentry';
+
+function isoTimestamp(value: Date | string | number | undefined): string {
+    if (value instanceof Date) return value.toISOString();
+    return value === undefined ? '' : String(value);
+}
+
+function toOptionContract(contract: CallOrPut) {
+    return {
+        contractSymbol: contract.contractSymbol,
+        strike: contract.strike,
+        currency: contract.currency,
+        lastPrice: contract.lastPrice ?? 0,
+        change: contract.change ?? 0,
+        percentChange: contract.percentChange ?? 0,
+        volume: contract.volume ?? 0,
+        openInterest: contract.openInterest ?? 0,
+        bid: contract.bid ?? 0,
+        ask: contract.ask ?? 0,
+        contractSize: contract.contractSize || 'REGULAR',
+        expiration: isoTimestamp(contract.expiration),
+        lastTradeDate: isoTimestamp(contract.lastTradeDate),
+        impliedVolatility: contract.impliedVolatility ?? 0,
+        inTheMoney: contract.inTheMoney ?? false,
+    };
+}
 
 export async function GET(request: Request) {
     const parsed = parseWithSchema(optionsQuerySchema, firstQueryValues(request));
@@ -20,13 +47,12 @@ export async function GET(request: Request) {
     const { ticker, date } = parsed.data;
 
     try {
-        const queryOptions: Record<string, unknown> = {};
+        const queryOptions: OptionsOptions = {};
         if (date) {
             queryOptions.date = new Date(date);
         }
 
-        // @ts-ignore - yahoo-finance2 types can be tricky
-        const result = await yahooFinance.options(ticker.toUpperCase(), queryOptions) as any;
+        const result = await yahooFinance.options(ticker.toUpperCase(), queryOptions);
 
         if (!result) {
             throw new Error('No options data returned from Yahoo Finance');
@@ -49,53 +75,13 @@ export async function GET(request: Request) {
                 regularMarketChangePercent: quote.regularMarketChangePercent ?? 0,
                 marketCap: quote.marketCap ?? undefined,
             },
-            options: (result.options || []).map((opt: any) => ({
+            options: (result.options || []).map((opt) => ({
                 expirationDate: opt.expirationDate instanceof Date
                     ? opt.expirationDate.toISOString()
                     : String(opt.expirationDate),
                 hasMiniOptions: opt.hasMiniOptions || false,
-                calls: (opt.calls || []).map((c: any) => ({
-                    contractSymbol: c.contractSymbol,
-                    strike: c.strike,
-                    currency: c.currency,
-                    lastPrice: c.lastPrice ?? 0,
-                    change: c.change ?? 0,
-                    percentChange: c.percentChange ?? 0,
-                    volume: c.volume ?? 0,
-                    openInterest: c.openInterest ?? 0,
-                    bid: c.bid ?? 0,
-                    ask: c.ask ?? 0,
-                    contractSize: c.contractSize || 'REGULAR',
-                    expiration: c.expiration instanceof Date
-                        ? c.expiration.toISOString()
-                        : String(c.expiration || ''),
-                    lastTradeDate: c.lastTradeDate instanceof Date
-                        ? c.lastTradeDate.toISOString()
-                        : String(c.lastTradeDate || ''),
-                    impliedVolatility: c.impliedVolatility ?? 0,
-                    inTheMoney: c.inTheMoney ?? false,
-                })),
-                puts: (opt.puts || []).map((p: any) => ({
-                    contractSymbol: p.contractSymbol,
-                    strike: p.strike,
-                    currency: p.currency,
-                    lastPrice: p.lastPrice ?? 0,
-                    change: p.change ?? 0,
-                    percentChange: p.percentChange ?? 0,
-                    volume: p.volume ?? 0,
-                    openInterest: p.openInterest ?? 0,
-                    bid: p.bid ?? 0,
-                    ask: p.ask ?? 0,
-                    contractSize: p.contractSize || 'REGULAR',
-                    expiration: p.expiration instanceof Date
-                        ? p.expiration.toISOString()
-                        : String(p.expiration || ''),
-                    lastTradeDate: p.lastTradeDate instanceof Date
-                        ? p.lastTradeDate.toISOString()
-                        : String(p.lastTradeDate || ''),
-                    impliedVolatility: p.impliedVolatility ?? 0,
-                    inTheMoney: p.inTheMoney ?? false,
-                })),
+                calls: (opt.calls || []).map(toOptionContract),
+                puts: (opt.puts || []).map(toOptionContract),
             })),
         };
 
