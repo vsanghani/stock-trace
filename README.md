@@ -106,10 +106,40 @@ These match the routes implemented in this app. Change them only if you move the
 | `FMP_API_KEY` | **Server — secret** | Supplementary fundamentals for the DCF model. [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs). |
 | `DATABASE_URL` | **Server — secret** | Postgres connection string. |
 | `SEC_USER_AGENT` | Server | User-Agent for SEC EDGAR requests, including a contact email. |
+| `SENTRY_DSN` | **Server — secret** | [Sentry](https://sentry.io) DSN for server and edge errors. Free tier. Unset disables Sentry. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Client | Sentry DSN for browser errors. Unset disables client reporting. |
+| `SENTRY_AUTH_TOKEN` | **Server — secret** | Build-time token for source map upload. Unset skips the upload. |
+| `SENTRY_ORG` | Server | Sentry organization slug. Required with `SENTRY_PROJECT` before maps are uploaded. |
+| `SENTRY_PROJECT` | Server | Sentry project slug. Required with `SENTRY_ORG` before maps are uploaded. |
+| `UPSTASH_REDIS_REST_URL` | **Server — secret** | Upstash Redis REST URL for shared API rate limits. Free tier. Unset uses an in-memory window. |
+| `UPSTASH_REDIS_REST_TOKEN` | **Server — secret** | Upstash Redis REST token. Both this and the URL are required. |
 
 Variables prefixed `NEXT_PUBLIC_` are inlined into the client bundle and are visible to anyone using
 the site. Never give a secret that prefix. Without `OPENROUTER_API_KEY` and `ALPHA_VANTAGE_API_KEY`,
-sentiment analysis and forecast assumptions fall back to sample data rather than failing.
+sentiment analysis and forecast assumptions fall back to sample data rather than failing. Sentry and
+Upstash are no-ops until their variables are set. A bad optional value is logged once and ignored;
+the process keeps running. `src/lib/env.ts` is the typed list.
+
+---
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on pull requests into `development` and `feature/**`:
+
+1. `npm ci`
+2. `npm run typecheck`
+3. ESLint on the files changed in the pull request (the tree still has older lint failures)
+4. `npm test`
+5. `npm run build` with dummy environment values so startup validation runs
+
+A separate job listens for `deployment_status`. After the Vercel preview for an open pull request
+into those branches is successful, it requests `/` and `/api/search?q=AAPL`. Any 5xx fails the job.
+The request sends `x-vercel-protection-bypass` from the repository secret
+`VERCEL_AUTOMATION_BYPASS_SECRET`. When that secret is absent the job skips with a notice.
+
+GitHub only starts `deployment_status` workflows from the default branch, so the smoke job stays
+quiet until this workflow file is on that branch. The workflow does not change Vercel project
+settings or write repository secrets.
 
 ---
 
