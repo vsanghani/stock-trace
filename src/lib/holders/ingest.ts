@@ -553,6 +553,7 @@ async function reconcileStoredHoldings(pool: pg.Pool, log: Log): Promise<void> {
                     value_unit, put_call, share_type, value_unit_flagged
              FROM holding_13f
              WHERE cusip = $1
+               -- Original and restatement rows for one filer must not be averaged into one price.
                AND NOT superseded
                AND shares > 0
                AND COALESCE(put_call, '') = ''

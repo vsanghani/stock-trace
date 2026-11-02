@@ -91,6 +91,27 @@ describe("implied price against the filer median", () => {
         expect(reconciled.filter((line) => line.filerCik !== "outlier").every((line) => !line.unitCorrected)).toBe(true)
     })
 
+    it("does not blend a filer's superseded original with its restatement", () => {
+        // Three filers restate a $10 price over a superseded $10,000 lot large enough
+        // that averaging the two would sit about 1000x above the other filers.
+        const amended = ["vanguard", "blackrock", "state-street"].flatMap((filer) => [
+            priceLine(filer, 10_000, 1_000),
+            { ...priceLine(filer, 90_000_000, 9_000), superseded: true },
+        ])
+        const peers = [priceLine("fidelity", 10_000, 1_000), priceLine("schwab", 10_000, 1_000)]
+        const reconciled = reconcileImpliedPrices([...amended, ...peers])
+
+        for (const line of reconciled.filter((row) => !row.superseded)) {
+            expect(line.valueUsd).toBe(10_000)
+            expect(line.impliedPrice).toBe(10)
+            expect(line.unitCorrected).toBe(false)
+        }
+        for (const line of reconciled.filter((row) => row.superseded)) {
+            expect(line.valueUsd).toBe(90_000_000)
+            expect(line.unitCorrected).toBe(false)
+        }
+    })
+
     it("ignores superseded lines when they would otherwise set the median", () => {
         const active = [priceLine("active-a", 400, 1_000), priceLine("active-b", 400, 1_000)]
         const stale = [0, 1, 2].map((index) => ({
