@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { SentimentResult, NewsHeadline, getSentimentLabel } from '@/types/sentiment'
-import { SITE_NAME } from '@/lib/site'
+import { SITE_NAME, siteUrl } from '@/lib/site'
+import { getServerEnv } from '@/lib/env.server'
+import { fetchUpstream } from '@/lib/api/upstream'
+import { absentBodySchema, parseJsonBody, parseWithSchema, tickerParamsSchema } from '@/lib/api/validate'
+import { captureServerException } from '@/lib/sentry'
 
 interface RouteParams {
     params: Promise<{ ticker: string }>
@@ -26,7 +30,7 @@ function getMockHeadlines(ticker: string): NewsHeadline[] {
 
 // Analyze sentiment using OpenRouter API
 async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promise<{ score: number; reason: string }> {
-    const apiKey = process.env.OPENROUTER_API_KEY
+    const apiKey = getServerEnv().OPENROUTER_API_KEY
 
     if (!apiKey) {
         // Fallback: generate mock sentiment based on ticker hash
@@ -45,12 +49,14 @@ async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promis
     const userPrompt = `Headlines for ${ticker}:\n${headlineText}`
 
     try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetchUpstream('https://openrouter.ai/api/v1/chat/completions', {
+            service: 'OpenRouter',
+            timeoutMs: 20_000,
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+                'HTTP-Referer': siteUrl().origin,
                 "X-Title": `${SITE_NAME} Sentiment`,
             },
             body: JSON.stringify({
@@ -63,10 +69,6 @@ async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promis
                 temperature: 0.3,
             }),
         })
-
-        if (!response.ok) {
-            throw new Error(`OpenRouter API error: ${response.status}`)
-        }
 
         const data = await response.json()
         const content = data.choices?.[0]?.message?.content || ''
@@ -83,7 +85,7 @@ async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promis
 
         throw new Error('Invalid LLM response format')
     } catch (error) {
-        console.error('LLM analysis error:', error)
+        console.error('LLM analysis error:', error instanceof Error ? error.message : 'llm failed')
         // Fallback on error
         return {
             score: 50,
@@ -94,20 +96,17 @@ async function analyzeWithLLM(ticker: string, headlines: NewsHeadline[]): Promis
 
 // Fetch news from Alpha Vantage (or use mock)
 async function fetchNewsHeadlines(ticker: string): Promise<NewsHeadline[]> {
-    const apiKey = process.env.ALPHA_VANTAGE_API_KEY
+    const apiKey = getServerEnv().ALPHA_VANTAGE_API_KEY
 
     if (!apiKey) {
         return getMockHeadlines(ticker)
     }
 
     try {
-        const response = await fetch(
-            `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&limit=10&apikey=${apiKey}`
+        const response = await fetchUpstream(
+            `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${encodeURIComponent(ticker)}&limit=10&apikey=${encodeURIComponent(apiKey)}`,
+            { service: 'Alpha Vantage', timeoutMs: 8_000 }
         )
-
-        if (!response.ok) {
-            throw new Error('Alpha Vantage API error')
-        }
 
         const data = await response.json()
 
@@ -122,19 +121,19 @@ async function fetchNewsHeadlines(ticker: string): Promise<NewsHeadline[]> {
 
         return getMockHeadlines(ticker)
     } catch (error) {
-        console.error('News fetch error:', error)
+        console.error('News fetch error:', error instanceof Error ? error.message : 'news fetch failed')
         return getMockHeadlines(ticker)
     }
 }
 
 export async function GET(request: Request, { params }: RouteParams) {
-    const { ticker } = await params
+    const parsed = parseWithSchema(tickerParamsSchema, await params)
+    if (!parsed.ok) return parsed.response
 
-    if (!ticker) {
-        return NextResponse.json({ error: 'Ticker is required' }, { status: 400 })
-    }
+    const body = await parseJsonBody(request, absentBodySchema)
+    if (!body.ok) return body.response
 
-    const upperTicker = ticker.toUpperCase()
+    const upperTicker = parsed.data.ticker
 
     try {
         // Fetch news headlines
@@ -153,9 +152,10 @@ export async function GET(request: Request, { params }: RouteParams) {
 
         return NextResponse.json(result)
     } catch (error) {
-        console.error('Sentiment analysis error:', error)
+        console.error('Sentiment analysis error:', error instanceof Error ? error.message : 'sentiment failed')
+        captureServerException(error)
         return NextResponse.json(
-            { error: 'Failed to analyze sentiment', details: String(error) },
+            { error: 'Failed to analyze sentiment' },
             { status: 500 }
         )
     }

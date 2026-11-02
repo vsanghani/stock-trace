@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { LandingSearch } from "@/components/landing/landing-search"
 import { MarketsCovered } from "@/components/landing/markets-covered"
+import { hasClerkPublishableKey } from "@/lib/env"
 import { SITE_NAME } from "@/lib/site"
 
 const FEATURES = [
@@ -96,7 +97,7 @@ export default async function LandingPage({
         redirect(`/dashboard?ticker=${encodeURIComponent(ticker)}`)
     }
 
-    const clerkReady = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim())
+    const clerkReady = hasClerkPublishableKey()
 
     return (
         <div className="relative z-10">

@@ -1,15 +1,23 @@
 import { NextResponse } from 'next/server';
-import YahooFinance from 'yahoo-finance2';
 
-const yahooFinance = new YahooFinance();
+import { yahooFinance } from '@/lib/api/yahoo';
+import {
+    absentBodySchema,
+    firstQueryValues,
+    parseJsonBody,
+    parseWithSchema,
+    stockQuerySchema,
+} from '@/lib/api/validate';
+import { captureServerException } from '@/lib/sentry';
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const ticker = searchParams.get('ticker');
+    const parsed = parseWithSchema(stockQuerySchema, firstQueryValues(request));
+    if (!parsed.ok) return parsed.response;
 
-    if (!ticker) {
-        return NextResponse.json({ error: 'Ticker is required' }, { status: 400 });
-    }
+    const body = await parseJsonBody(request, absentBodySchema);
+    if (!body.ok) return body.response;
+
+    const ticker = parsed.data.ticker;
 
     try {
         const queryOptions = { modules: ['price', 'summaryDetail', 'financialData', 'defaultKeyStatistics', 'recommendationTrend', 'upgradeDowngradeHistory', 'assetProfile', 'earnings'] };
@@ -110,7 +118,8 @@ export async function GET(request: Request) {
 
         return NextResponse.json(stockData);
     } catch (error) {
-        console.error('Error fetching stock data:', error);
-        return NextResponse.json({ error: 'Failed to fetch stock data', details: String(error) }, { status: 500 });
+        console.error('Error fetching stock data:', error instanceof Error ? error.message : 'stock lookup failed');
+        captureServerException(error);
+        return NextResponse.json({ error: 'Failed to fetch stock data' }, { status: 500 });
     }
 }

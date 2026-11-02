@@ -1,6 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
+import { enforceRateLimit, rateLimitPolicyForPath } from "@/lib/api/rate-limit";
+import { getServerEnv } from "@/lib/env.server";
+
 /**
  * Everything not listed here requires a signed-in user.
  *
@@ -41,17 +44,23 @@ function hasValue(value: string | undefined): boolean {
 
 /** Clerk throws from middleware when either key is absent. Skip it instead. */
 function hasClerkKeys(): boolean {
-  return (
-    hasValue(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) &&
-    hasValue(process.env.CLERK_SECRET_KEY)
-  );
+  const env = getServerEnv();
+  return hasValue(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) && hasValue(env.CLERK_SECRET_KEY);
+}
+
+async function limitApi(request: NextRequest, userId: string | null): Promise<NextResponse | null> {
+  if (!request.nextUrl.pathname.startsWith("/api/")) return null;
+  return enforceRateLimit(request, rateLimitPolicyForPath(request.nextUrl.pathname), { userId });
 }
 
 /**
  * Same route split as the Clerk handler, but protected routes fail closed.
  * Public pages pass through. Nothing behind auth is rendered.
  */
-function proxyWithoutClerk(request: NextRequest): NextResponse {
+async function proxyWithoutClerk(request: NextRequest): Promise<NextResponse> {
+  const limited = await limitApi(request, null);
+  if (limited) return limited;
+
   if (isPublicRoute(request)) {
     return NextResponse.next();
   }
@@ -67,16 +76,20 @@ function proxyWithoutClerk(request: NextRequest): NextResponse {
 }
 
 const clerkProxy = clerkMiddleware(async (auth, request) => {
-  if (isPublicRoute(request)) {
-    return;
-  }
-
-  // Data endpoints answer with JSON so callers don't have to parse a sign-in page.
+  // Public pages stay a pass-through. Only API routes need a user id, both for
+  // the per-user limit and for the JSON 401 below.
   if (request.nextUrl.pathname.startsWith("/api/")) {
     const { userId } = await auth();
+    const limited = await limitApi(request, userId);
+    if (limited) return limited;
+    if (isPublicRoute(request)) return;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    return;
+  }
+
+  if (isPublicRoute(request)) {
     return;
   }
 

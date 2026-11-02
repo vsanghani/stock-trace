@@ -18,6 +18,8 @@ import {
     type ForecastScenario,
     type ForecastScenarioId,
 } from "@/types/forecast"
+import { getServerEnv } from "@/lib/env.server"
+import { fetchUpstream } from "@/lib/api/upstream"
 import { SITE_NAME, siteUrl } from "@/lib/site"
 import { validateForecastAssumptions } from "@/lib/finance"
 
@@ -40,8 +42,8 @@ export interface ForecastAssumptionFetchResult {
 
 export interface FetchForecastAssumptionsOptions {
     /**
-     * When omitted, reads `process.env.OPENROUTER_API_KEY`. Pass `null` or `""`
-     * in tests to force the mock path without touching the real env.
+     * When omitted, reads `OPENROUTER_API_KEY` from the server env. Pass `null`
+     * or `""` in tests to force the mock path without touching the real env.
      */
     apiKey?: string | null
     fetchImpl?: typeof fetch
@@ -271,6 +273,7 @@ async function completeWithOpenRouter(
             max_tokens: 700,
             temperature: 0.2,
         }),
+        signal: AbortSignal.timeout(20_000),
     })
 
     if (!response.ok) {
@@ -293,9 +296,11 @@ export async function fetchForecastAssumptions(
     context: ForecastLlmContext,
     options: FetchForecastAssumptionsOptions = {}
 ): Promise<ForecastAssumptionFetchResult> {
-    const apiKey = options.apiKey === undefined ? process.env.OPENROUTER_API_KEY : options.apiKey
+    const apiKey = options.apiKey === undefined ? getServerEnv().OPENROUTER_API_KEY : options.apiKey
     const model = options.model ?? FORECAST_LLM_MODEL
-    const fetchImpl = options.fetchImpl ?? fetch
+    const fetchImpl =
+        options.fetchImpl ??
+        ((input, init) => fetchUpstream(input, { ...init, service: "OpenRouter", timeoutMs: 20_000 }))
 
     if (!apiKey) return fallbackResult(context)
 

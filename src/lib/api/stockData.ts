@@ -10,12 +10,14 @@
  * client component.
  */
 
-import YahooFinance from "yahoo-finance2"
-
 import { historicalGrowthRate } from "@/lib/finance"
+import { getServerEnv } from "@/lib/env.server"
 import type { FinancialYear, ValuationSnapshot } from "@/types/valuation"
 
+import { createTtlCache } from "./cache"
 import { getMockSnapshot } from "./mockCompanies"
+import { fetchUpstream, UpstreamError } from "./upstream"
+import { yahooFinance } from "./yahoo"
 
 export const CACHE_TTL_SECONDS = 3600
 
@@ -24,13 +26,11 @@ const CACHE_TTL_MS = CACHE_TTL_SECONDS * 1000
 /** Number of fiscal years to pull for the growth benchmarks. */
 const HISTORY_YEARS = 4
 
-const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] })
-
 /**
  * Process-level cache. Next's fetch cache does not cover the Yahoo client,
  * which uses its own transport, so this is what actually protects rate limits.
  */
-const snapshotCache = new Map<string, { snapshot: ValuationSnapshot; expiresAt: number }>()
+const snapshotCache = createTtlCache<ValuationSnapshot>(CACHE_TTL_MS)
 
 /* ------------------------------------------------------------------ */
 /* Yahoo Finance                                                       */
@@ -191,14 +191,20 @@ interface FmpIncome {
 
 async function fmpGet<T>(path: string, apiKey: string): Promise<T[]> {
     const separator = path.includes("?") ? "&" : "?"
-    const url = `https://financialmodelingprep.com/api/v3/${path}${separator}apikey=${apiKey}`
+    const url = `https://financialmodelingprep.com/api/v3/${path}${separator}apikey=${encodeURIComponent(apiKey)}`
 
-    const response = await fetch(url, { next: { revalidate: CACHE_TTL_SECONDS } })
-    if (!response.ok) {
-        throw new Error(`Financial Modeling Prep responded ${response.status} for ${path}`)
+    const response = await fetchUpstream(url, {
+        service: "Financial Modeling Prep",
+        timeoutMs: 8_000,
+        next: { revalidate: CACHE_TTL_SECONDS },
+    })
+
+    let payload: unknown
+    try {
+        payload = await response.json()
+    } catch {
+        throw new UpstreamError("Financial Modeling Prep", response.status)
     }
-
-    const payload: unknown = await response.json()
     return Array.isArray(payload) ? (payload as T[]) : []
 }
 
@@ -266,7 +272,7 @@ async function fetchFromFmp(ticker: string, apiKey: string): Promise<ValuationSn
 /* ------------------------------------------------------------------ */
 
 function providerChain(ticker: string): Array<() => Promise<ValuationSnapshot>> {
-    const apiKey = process.env.FMP_API_KEY?.trim()
+    const apiKey = getServerEnv().FMP_API_KEY
     const yahoo = () => fetchFromYahoo(ticker)
 
     return apiKey ? [() => fetchFromFmp(ticker, apiKey), yahoo] : [yahoo]
@@ -281,15 +287,16 @@ export async function fetchValuationSnapshot(rawTicker: string): Promise<Valuati
     if (!ticker) throw new Error("A ticker symbol is required")
 
     const cached = snapshotCache.get(ticker)
-    if (cached && cached.expiresAt > Date.now()) return cached.snapshot
+    if (cached) return cached
 
     for (const attempt of providerChain(ticker)) {
         try {
             const snapshot = await attempt()
-            snapshotCache.set(ticker, { snapshot, expiresAt: Date.now() + CACHE_TTL_MS })
+            snapshotCache.set(ticker, snapshot)
             return snapshot
         } catch (error) {
-            console.error(`Valuation provider failed for ${ticker}:`, error)
+            const message = error instanceof Error ? error.message : "provider failed"
+            console.error(`Valuation provider failed for ${ticker}: ${message}`)
         }
     }
 

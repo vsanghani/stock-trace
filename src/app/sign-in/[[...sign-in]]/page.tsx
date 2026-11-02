@@ -1,4 +1,5 @@
 import { SignIn } from "@clerk/nextjs"
+import { hasClerkPublishableKey } from "@/lib/env"
 import { pageMetadata } from "@/lib/site"
 
 export const metadata = pageMetadata(
@@ -15,7 +16,7 @@ export default function SignInPage() {
                     Sign in to pick up your research where you left off.
                 </p>
             </div>
-            {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ? (
+            {hasClerkPublishableKey() ? (
                 <SignIn signUpUrl="/sign-up" fallbackRedirectUrl="/dashboard" />
             ) : (
                 <p className="text-sm text-muted-foreground">Sign-in is not configured.</p>

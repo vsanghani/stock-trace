@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server';
-import YahooFinance from 'yahoo-finance2';
 
-const yahooFinance = new YahooFinance();
+import { yahooFinance } from '@/lib/api/yahoo';
+import {
+    absentBodySchema,
+    firstQueryValues,
+    optionsQuerySchema,
+    parseJsonBody,
+    parseWithSchema,
+} from '@/lib/api/validate';
+import { captureServerException } from '@/lib/sentry';
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const ticker = searchParams.get('ticker');
-    const date = searchParams.get('date');
+    const parsed = parseWithSchema(optionsQuerySchema, firstQueryValues(request));
+    if (!parsed.ok) return parsed.response;
 
-    if (!ticker) {
-        return NextResponse.json({ error: 'Ticker symbol is required' }, { status: 400 });
-    }
+    const body = await parseJsonBody(request, absentBodySchema);
+    if (!body.ok) return body.response;
+
+    const { ticker, date } = parsed.data;
 
     try {
         const queryOptions: Record<string, unknown> = {};
@@ -94,9 +101,10 @@ export async function GET(request: Request) {
 
         return NextResponse.json(optionsData);
     } catch (error) {
-        console.error('Error fetching options data:', error);
+        console.error('Error fetching options data:', error instanceof Error ? error.message : 'options lookup failed');
+        captureServerException(error);
         return NextResponse.json(
-            { error: 'Failed to fetch options data', details: String(error) },
+            { error: 'Failed to fetch options data' },
             { status: 500 }
         );
     }

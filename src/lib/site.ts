@@ -12,6 +12,11 @@ export const SITE_TAGLINE =
 export const COMPANY_NAME = "Vrtx Labs"
 export const COMPANY_URL = "https://www.vrtxlabs.tech"
 
+/**
+ * Static `process.env` read. This module is imported by client components, so it
+ * cannot go through the server env parser. The value is still declared on the
+ * schema in `env.ts` and checked at startup.
+ */
 export function siteUrl(): URL {
     const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim()
     try {
