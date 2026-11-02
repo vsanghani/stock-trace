@@ -1,7 +1,8 @@
 name: CI
 
-# `deployment_status` only runs from the workflow file on the repository's
-# default branch. Preview smoke stays dark until this file is on that branch.
+# `deployment_status` runs the workflow file on the deployed ref, the commit
+# Vercel deployed, including a pull request branch. It is not limited to the
+# default branch.
 on:
   pull_request:
     branches:
@@ -111,13 +112,15 @@ jobs:
     if: needs.smoke-preflight.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout matcher
+        uses: actions/checkout@v4
+
       - name: Select preview deployment
         id: gate
         uses: actions/github-script@v7
         with:
           script: |
-            const ref = String(context.payload.deployment?.ref ?? "")
-            const sha = String(context.payload.deployment?.sha ?? "")
+            const { matchPreviewSmoke } = require(process.env.GITHUB_WORKSPACE + "/scripts/preview-smoke-match.cjs")
             const { owner, repo } = context.repo
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner,
@@ -125,33 +128,41 @@ jobs:
               state: "open",
               per_page: 100,
             })
-            const same = (left, right) => left.length > 0 && left === right
-            const watched = pulls.filter((pull) => pull.base.ref === "development" || pull.base.ref.startsWith("feature/"))
-            const match = watched.find((pull) =>
-              same(ref, pull.head.ref) ||
-              same(ref, pull.head.sha) ||
-              same(sha, pull.head.ref) ||
-              same(sha, pull.head.sha)
+            const decision = matchPreviewSmoke(
+              {
+                ref: context.payload.deployment?.ref,
+                sha: context.payload.deployment?.sha,
+              },
+              pulls.map((pull) => ({
+                number: pull.number,
+                baseRef: pull.base.ref,
+                headRef: pull.head.ref,
+                headSha: pull.head.sha,
+              }))
             )
-            if (!match) {
-              core.setFailed(
-                `No open pull request into development or feature/** matches this deployment. ` +
-                `deployment.ref=${ref || "(empty)"} deployment.sha=${sha || "(empty)"}. ` +
-                `Compared both values with pull.head.ref and pull.head.sha ` +
-                `(${watched.length} watched pulls of ${pulls.length} open). Smoke was not skipped.`
-              )
+            if (decision.action === "fail") {
+              core.setOutput("action", "fail")
+              core.setFailed(decision.message)
+              return
+            }
+            if (decision.action === "skip") {
+              core.setOutput("action", "skip")
+              core.notice(decision.message)
               return
             }
 
             const url = context.payload.deployment_status.environment_url || context.payload.deployment_status.target_url
             if (!url || !String(url).startsWith("https://")) {
-              core.setFailed(`Preview deployment for pull request #${match.number} succeeded without an https environment URL.`)
+              core.setOutput("action", "fail")
+              core.setFailed(`Preview deployment for pull request #${decision.pullNumber} succeeded without an https environment URL.`)
               return
             }
-            core.info(`Matched pull request #${match.number} (${match.head.ref} @ ${match.head.sha}).`)
+            core.info(decision.message)
+            core.setOutput("action", "run")
             core.setOutput("url", String(url))
 
       - name: Request preview
+        if: success() && steps.gate.outputs.action == 'run'
         env:
           PREVIEW_URL: ${{ steps.gate.outputs.url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

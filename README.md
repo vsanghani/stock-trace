@@ -132,18 +132,19 @@ the process keeps running. `src/lib/env.ts` is the typed list.
 4. `npm test`
 5. `npm run build` with dummy environment values so startup validation runs
 
-A separate **Preview smoke** job listens for `deployment_status`. It runs only for a non-production
-deployment whose `deployment.ref` or `deployment.sha` matches an open pull request into `development`
-or `feature/**` (`pull.head.ref` or `pull.head.sha`). If nothing matches, the job fails. It then
-requests `/` and `/api/health`. Any 5xx fails the job. The request sends `x-vercel-protection-bypass`
-from the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`.
+A separate **Preview smoke** job listens for `deployment_status`. GitHub runs that workflow
+from the deployed ref's workflow file, including a pull request branch, not only from the default
+branch. The job runs for a non-production deployment. It smokes the preview when an open pull
+request into `development` or `feature/**` has that deployment's commit as `head.sha` (or the same
+branch name in `deployment.ref` and a matching head SHA). If the branch matches a pull request but
+the commit does not, the job fails. Anything else — no open pull request, a plain branch deploy, or
+a SHA with no matching pull request — logs a notice and exits 0. The requests are `/` and
+`/api/health`. Any 5xx fails the job. The request sends `x-vercel-protection-bypass` from the
+repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`.
 
 When that secret is absent, **Preview smoke** is skipped at job level (it does not run and exit
 green). GitHub still reports a skipped job's merge conclusion as success, so do not mark Preview
-smoke as a required check until the secret is set.
-
-GitHub only starts `deployment_status` workflows from the default branch, so the smoke job stays
-quiet until this workflow file is on that branch. The workflow does not change Vercel project
+smoke as a required check until the secret is set. The workflow does not change Vercel project
 settings or write repository secrets.
 
 ---
